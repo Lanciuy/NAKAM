@@ -50,8 +50,8 @@ Buat lo yang mau nge-clone atau ngembangin lagi project ini secara lokal, gampan
 
 1. Clone repository ini:
    ```bash
-   git clone https://github.com/username-lo/nakam.git
-   cd nakam
+   git clone https://github.com/Lanciuy/NAKAM.git
+   cd NAKAM
    ```
 2. Install semua dependencies:
    ```bash
