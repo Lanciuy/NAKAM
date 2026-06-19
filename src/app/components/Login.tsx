@@ -32,14 +32,20 @@ export function Login({ onDone }: { onDone: () => void }) {
         setPhase("login");
         return;
       }
+      // If login successful, bypass onboarding and go straight to Home
+      setTimeout(() => {
+        onDone();
+      }, 500);
+      return;
     }
 
+    // Fallback for no supabase or mock login
     setTimeout(() => {
       setProfName(user.name !== "Rangga Pratama" ? user.name : username);
       setProfBio(user.bio);
       setProfCampus(campus);
       setPhase("profile");
-    }, hasSupabase ? 500 : 1500);
+    }, 1500);
   };
 
   const handleRegister = async () => {
