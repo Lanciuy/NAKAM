@@ -42,6 +42,8 @@ export type Merchant = {
   emoji: string;
   status: "buka" | "ramai" | "tutup";
   price: string;
+  lat: number;
+  lng: number;
   menu: MerchantMenuItem[];
   orders: MerchantOrder[];
   views: number;
@@ -79,7 +81,7 @@ type Store = {
   // Merchant
   merchant: Merchant;
   merchantDbId: string | null;
-  finishOnboarding: (data: { name: string; campus: string; emoji: string; price: string; menu: MerchantMenuItem[] }) => void;
+  finishOnboarding: (data: { name: string; campus: string; emoji: string; price: string; lat: number; lng: number; menu: MerchantMenuItem[] }) => void;
   setMerchantStatus: (s: Merchant["status"]) => void;
   setMerchantInfo: (info: Partial<Pick<Merchant, "name" | "emoji" | "price" | "campus">>) => void;
   addMenuItem: (m: Omit<MerchantMenuItem, "id" | "sold">) => void;
@@ -257,7 +259,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setMerchantDbId(null);
     setMerchant({
       onboarded: false, name: "", campus: "UMM", emoji: "🍜",
-      status: "buka", price: "10k - 25k", menu: [], orders: [], views: 0,
+      status: "buka", price: "10k - 25k", lat: 0, lng: 0, menu: [], orders: [], views: 0,
     });
   };
 
@@ -310,11 +312,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   // ─── Merchant ───
-  const finishOnboarding: Store["finishOnboarding"] = async ({ name, campus: mc, emoji, price, menu: menuItems }) => {
-    setMerchant((m) => ({ ...m, onboarded: true, name, campus: mc, emoji, price, menu: menuItems, views: 12 }));
+  const finishOnboarding: Store["finishOnboarding"] = async ({ name, campus: mc, emoji, price, lat, lng, menu: menuItems }) => {
+    setMerchant((m) => ({ ...m, onboarded: true, name, campus: mc, emoji, price, lat, lng, menu: menuItems, views: 12 }));
 
     if (supabaseUser) {
-      const dbId = await upsertMerchant(supabaseUser.id, { name, campus: mc, emoji, price, onboarded: true });
+      const dbId = await upsertMerchant(supabaseUser.id, { name, campus: mc, emoji, price, lat, lng, onboarded: true });
       if (dbId) {
         setMerchantDbId(dbId);
         // Add menu items

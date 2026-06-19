@@ -193,6 +193,8 @@ export async function fetchMerchant(userId: string): Promise<(Merchant & { dbId:
       emoji: data.emoji || "🍜",
       status: data.status || "buka",
       price: data.price_range || "10k - 25k",
+      lat: data.lat || -7.95,
+      lng: data.lng || 112.61,
       menu: (menuItems || []).map((m: any) => ({
         id: m.id,
         name: m.name,
@@ -217,7 +219,7 @@ export async function fetchMerchant(userId: string): Promise<(Merchant & { dbId:
 
 export async function upsertMerchant(
   userId: string,
-  data: { name: string; campus: string; emoji: string; price: string; onboarded: boolean; status?: string }
+  data: { name: string; campus: string; emoji: string; price: string; lat: number; lng: number; onboarded: boolean; status?: string }
 ): Promise<string | null> {
   if (!supabase) return null;
   try {
@@ -230,6 +232,8 @@ export async function upsertMerchant(
           campus: data.campus,
           emoji: data.emoji,
           price_range: data.price,
+          lat: data.lat,
+          lng: data.lng,
           onboarded: data.onboarded,
           status: data.status || "buka",
         },

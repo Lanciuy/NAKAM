@@ -5,6 +5,9 @@ import {
   Bell, Sparkles, ChevronRight, Power, ShoppingBag,
 } from "lucide-react";
 import { useStore, fmtRp, MerchantMenuItem } from "../store";
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
@@ -13,6 +16,13 @@ const STATUSES = [
   { key: "ramai", label: "Ramai", color: "bg-amber-500" },
   { key: "tutup", label: "Tutup", color: "bg-gray-500" },
 ] as const;
+
+const createMarkerIcon = (emoji: string) => L.divIcon({
+  className: '',
+  html: `<div class="relative flex h-12 w-12 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-emerald-500 to-emerald-600 text-xl shadow-xl">${emoji || '🍜'}</div><div class="absolute left-1/2 top-full mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] text-white shadow" style="font-weight:700">LOKASI TOKO</div>`,
+  iconSize: [40, 40],
+  iconAnchor: [20, 20]
+});
 
 const CAMPUSES = [
   { code: "UMM", name: "Universitas Muhammadiyah Malang" },
@@ -36,6 +46,8 @@ function Onboarding({ onBack }: { onBack: () => void }) {
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("🍜");
   const [campus, setCampus] = useState("UMM");
+  const [lat, setLat] = useState(-7.9213);
+  const [lng, setLng] = useState(112.5990);
   const [price, setPrice] = useState("10k - 25k");
   const [menu, setMenu] = useState<MerchantMenuItem[]>([]);
   const [draft, setDraft] = useState({ name: "", price: "", emoji: "🍳" });
@@ -48,24 +60,35 @@ function Onboarding({ onBack }: { onBack: () => void }) {
 
   const next = () => setStep((s) => s + 1);
   const finish = () => {
-    finishOnboarding({ name, campus, emoji, price, menu });
+    finishOnboarding({ name, campus, emoji, price, lat, lng, menu });
   };
 
-  const canNext = step === 0 ? name.trim().length >= 3 : step === 1 ? !!campus : true;
+  const canNext = step === 0 ? name.trim().length >= 3 : step === 1 ? !!campus : step === 2 ? !!lat : true;
+
+  function LocationMarker() {
+    useMapEvents({ click(e) { setLat(e.latlng.lat); setLng(e.latlng.lng); } });
+    return <Marker position={[lat, lng]} icon={createMarkerIcon(emoji)} />;
+  }
+
+  function MapUpdater({ center }: { center: [number, number] }) {
+    const map = useMap();
+    map.flyTo(center, map.getZoom());
+    return null;
+  }
 
   return (
     <motion.div
       initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={spring}
-      className="scroll-smooth-y no-scrollbar absolute inset-0 z-50 h-full overflow-y-auto bg-gradient-to-b from-[#0a0e27] via-[#1a1f4d] to-[#0a0e27] text-white"
+      className="scroll-smooth-y no-scrollbar absolute inset-0 z-50 h-full w-full md:max-w-md md:mx-auto md:border-x md:border-white/10 md:shadow-2xl overflow-y-auto bg-gradient-to-b from-[#0a0e27] via-[#1a1f4d] to-[#0a0e27] text-white"
     >
       <div className="flex items-center gap-3 px-5 pt-12">
         <motion.button whileTap={{ scale: 0.9 }} onClick={onBack} className="rounded-full bg-white/10 p-2">
           <ArrowLeft size={18} />
         </motion.button>
         <div className="flex-1">
-          <div className="text-xs text-white/60">Setup Toko · Langkah {step + 1}/3</div>
+          <div className="text-xs text-white/60">Setup Toko · Langkah {step + 1}/4</div>
           <div className="mt-1 flex gap-1">
-            {[0, 1, 2].map((i) => (
+            {[0, 1, 2, 3].map((i) => (
               <div key={i} className={`h-1 flex-1 rounded-full ${i <= step ? "bg-[#FF6B1A]" : "bg-white/15"}`} />
             ))}
           </div>
@@ -144,6 +167,25 @@ function Onboarding({ onBack }: { onBack: () => void }) {
           )}
 
           {step === 2 && (
+            <motion.div key="s2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="flex flex-col h-[60vh]">
+              <div className="mb-1 text-3xl">📌</div>
+              <h1 className="text-2xl tracking-tight" style={{ fontWeight: 800 }}>Tandai Lokasi Asli</h1>
+              <p className="mt-1 text-sm text-white/60">Geser peta dan tap untuk menandai lokasi toko kamu persisnya di mana.</p>
+              
+              <div className="mt-5 flex-1 relative rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl">
+                <MapContainer center={[lat, lng]} zoom={16} zoomControl={false} className="h-full w-full">
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" />
+                  <LocationMarker />
+                  <MapUpdater center={[lat, lng]} />
+                </MapContainer>
+                <div className="absolute top-4 left-4 right-4 z-[400] rounded-xl bg-black/60 backdrop-blur-md p-3 border border-white/10 text-xs text-center font-medium">
+                  Klik di area peta untuk memindah Pin Lokasi
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 3 && (
             <motion.div key="s2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <div className="mb-1 text-3xl">📝</div>
               <h1 className="text-2xl tracking-tight" style={{ fontWeight: 800 }}>Tambah Menu Awal</h1>
@@ -209,11 +251,11 @@ function Onboarding({ onBack }: { onBack: () => void }) {
         <motion.button
           whileTap={{ scale: canNext ? 0.97 : 1 }}
           disabled={!canNext}
-          onClick={step < 2 ? next : finish}
+          onClick={step < 3 ? next : finish}
           className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-3.5 text-sm ${canNext ? "bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] text-white shadow-lg shadow-[#FF6B1A]/30" : "bg-white/10 text-white/40"}`}
           style={{ fontWeight: 700 }}
         >
-          {step < 2 ? <>Lanjut <ChevronRight size={16} /></> : <>🚀 Publikasi Toko</>}
+          {step < 3 ? <>Lanjut <ChevronRight size={16} /></> : <>🚀 Publikasi Toko</>}
         </motion.button>
       </div>
     </motion.div>
@@ -245,7 +287,7 @@ function Dashboard({ onBack }: { onBack: () => void }) {
   return (
     <motion.div
       initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={spring}
-      className="scroll-smooth-y no-scrollbar absolute inset-0 z-50 h-full overflow-y-auto bg-[#0a0e27] text-white"
+      className="scroll-smooth-y no-scrollbar absolute inset-0 z-50 h-full w-full md:max-w-md md:mx-auto md:border-x md:border-white/10 md:shadow-2xl overflow-y-auto bg-[#0a0e27] text-white"
     >
       <AnimatePresence>
         {showBanner && (

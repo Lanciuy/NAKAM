@@ -101,7 +101,7 @@ export function HomeMap({
     tags: ["Toko Kamu", merchant.status === "buka" ? "Buka" : merchant.status === "ramai" ? "Ramai" : "Tutup"],
     menu: merchant.menu.filter((m) => m.available).map((m) => ({ name: m.name, price: m.price, emoji: m.emoji })),
     gallery: ["https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800"],
-    lat: userPos.lat, lng: userPos.lng, campus, filter: [],
+    lat: merchant.lat || userPos.lat, lng: merchant.lng || userPos.lng, campus: merchant.campus || campus, filter: [],
     isMine: true,
     emoji: merchant.emoji,
   } : null;
