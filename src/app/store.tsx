@@ -211,14 +211,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // ─── Auth functions ───
   const login = async (email: string, password: string): Promise<string | null> => {
-    if (!supabase) return null; // No Supabase = allow any login
+    if (!supabase) {
+      setUserState(prev => ({ ...prev, name: email.split("@")[0] || "Mahasiswa", avatar: (email[0] || "M").toUpperCase() }));
+      return null; // No Supabase = allow any login and mock it
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return error.message;
     return null;
   };
 
   const signUp = async (email: string, password: string): Promise<string | null> => {
-    if (!supabase) return null;
+    if (!supabase) {
+      setUserState(prev => ({ ...prev, name: email.split("@")[0] || "Mahasiswa", avatar: (email[0] || "M").toUpperCase() }));
+      return null;
+    }
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return error.message;
     // Create initial profile
