@@ -79,7 +79,7 @@ function Onboarding({ onBack }: { onBack: () => void }) {
   return (
     <motion.div
       initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={spring}
-      className="scroll-smooth-y no-scrollbar absolute inset-0 z-50 h-full w-full md:max-w-md md:mx-auto md:border-x md:border-white/10 md:shadow-2xl overflow-y-auto bg-gradient-to-b from-[#0a0e27] via-[#1a1f4d] to-[#0a0e27] text-white"
+      className="scroll-smooth-y no-scrollbar absolute inset-0 z-50 h-full w-full overflow-y-auto bg-gradient-to-b from-[#0a0e27] via-[#1a1f4d] to-[#0a0e27] text-white"
     >
       <div className="flex items-center gap-3 px-5 pt-12">
         <motion.button whileTap={{ scale: 0.9 }} onClick={onBack} className="rounded-full bg-white/10 p-2">
@@ -287,7 +287,7 @@ function Dashboard({ onBack }: { onBack: () => void }) {
   return (
     <motion.div
       initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={spring}
-      className="scroll-smooth-y no-scrollbar absolute inset-0 z-50 h-full w-full md:max-w-md md:mx-auto md:border-x md:border-white/10 md:shadow-2xl overflow-y-auto bg-[#0a0e27] text-white"
+      className="scroll-smooth-y no-scrollbar absolute inset-0 z-50 h-full w-full overflow-y-auto bg-[#0a0e27] text-white"
     >
       <AnimatePresence>
         {showBanner && (

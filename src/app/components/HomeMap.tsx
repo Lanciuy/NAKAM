@@ -232,11 +232,11 @@ export function HomeMap({
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setCampusOpen(true)}
-              className="flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1.5 shadow-md backdrop-blur-xl"
+              className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-2 shadow-md backdrop-blur-xl"
             >
-              <span className="text-xs">📍</span>
-              <span className="text-[11px]" style={{ fontWeight: 700 }}>{campus}</span>
-              <ChevronDown size={11} />
+              <span className="text-sm">📍</span>
+              <span className="text-xs" style={{ fontWeight: 700 }}>{campus}</span>
+              <ChevronDown size={14} />
             </motion.button>
           </div>
 
@@ -244,18 +244,18 @@ export function HomeMap({
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={onOpenWallet}
-              className={`flex items-center gap-1 rounded-full px-2.5 py-1.5 shadow-md backdrop-blur-xl ${lowBalance ? "bg-red-50/90" : "bg-white/80"}`}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-2 shadow-md backdrop-blur-xl ${lowBalance ? "bg-red-50/95" : "bg-white/90"}`}
             >
-              <Wallet size={12} className={lowBalance ? "text-red-500" : ""} />
-              <span className="text-[10px]" style={{fontWeight:700}}>
+              <Wallet size={14} className={lowBalance ? "text-red-500" : ""} />
+              <span className="text-xs" style={{fontWeight:700}}>
                 {hideBalance ? "••••" : "Rp " + (remaining / 1000).toFixed(0) + "k"}
               </span>
             </motion.button>
-            <motion.button whileTap={{ scale: 0.9 }} onClick={toggleHideBalance} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 shadow-md backdrop-blur-xl">
-              {hideBalance ? <EyeOff size={15} /> : <Eye size={15} />}
+            <motion.button whileTap={{ scale: 0.9 }} onClick={toggleHideBalance} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-xl">
+              {hideBalance ? <EyeOff size={18} /> : <Eye size={18} />}
             </motion.button>
-            <motion.button whileTap={{ scale: 0.9 }} onClick={onOpenProfile} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 shadow-md backdrop-blur-xl">
-              <User size={15} />
+            <motion.button whileTap={{ scale: 0.9 }} onClick={onOpenProfile} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-xl">
+              <User size={18} />
             </motion.button>
           </div>
         </div>
@@ -274,10 +274,10 @@ export function HomeMap({
         {/* Search */}
         <motion.div
           initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ ...spring, delay: 0.1 }}
-          className="mt-3 flex items-center gap-2.5 rounded-2xl border border-white/50 bg-white/60 px-4 py-3 shadow-lg backdrop-blur-xl"
+          className="mt-3 flex items-center gap-2.5 rounded-2xl border border-white/50 bg-white/80 px-4 py-3 shadow-lg backdrop-blur-xl"
         >
           <Search size={18} className="text-gray-500" />
-          <input placeholder="Cari warkop, ayam geprek, atau menu..." className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-500" />
+          <input placeholder="Cari warkop, ayam geprek..." className="flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-gray-400" />
         </motion.div>
 
         <div className="mt-3 flex gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">

@@ -211,7 +211,7 @@ export function Login({ onDone }: { onDone: () => void }) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={spring}
-            className="relative z-10 flex h-full w-full md:max-w-md md:mx-auto flex-col overflow-y-auto px-6 pt-14 pb-8"
+            className="relative z-10 flex h-full w-full flex-col overflow-y-auto px-6 pt-14 pb-8"
           >
             <div className="mb-3 flex items-center gap-2 text-xs text-white/60">
               <span className="rounded-full bg-white/10 px-2 py-0.5">Step 1/2</span>
@@ -284,7 +284,7 @@ export function Login({ onDone }: { onDone: () => void }) {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={spring}
-            className="relative z-10 flex h-full w-full max-w-md mx-auto flex-col overflow-y-auto px-6 pt-14 pb-8"
+            className="relative z-10 flex h-full w-full flex-col overflow-y-auto px-6 pt-14 pb-8"
           >
             <div className="mb-3 flex items-center gap-2 text-xs text-white/60">
               <span className="rounded-full bg-white/10 px-2 py-0.5">Step 2/2</span>
