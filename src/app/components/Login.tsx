@@ -8,12 +8,16 @@ import { isSupabaseConfigured } from "../supabase";
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 export function Login({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState<"login" | "loading" | "budget" | "register">("login");
+  const [phase, setPhase] = useState<"login" | "loading" | "profile" | "budget" | "register">("login");
   const [show, setShow] = useState(false);
   const [username, setUsername] = useState("");
   const [pass, setPass] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const { setBudget, login, signUp } = useStore();
+  const { setBudget, login, signUp, user, setUser, campus, setCampus } = useStore();
+  
+  const [profName, setProfName] = useState("");
+  const [profBio, setProfBio] = useState("");
+  const [profCampus, setProfCampus] = useState("UMM");
   const [target, setTarget] = useState("1500000");
   const hasSupabase = isSupabaseConfigured();
 
@@ -30,7 +34,12 @@ export function Login({ onDone }: { onDone: () => void }) {
       }
     }
 
-    setTimeout(() => setPhase("budget"), hasSupabase ? 500 : 1500);
+    setTimeout(() => {
+      setProfName(user.name !== "Rangga Pratama" ? user.name : username);
+      setProfBio(user.bio);
+      setProfCampus(campus);
+      setPhase("profile");
+    }, hasSupabase ? 500 : 1500);
   };
 
   const handleRegister = async () => {
@@ -54,7 +63,12 @@ export function Login({ onDone }: { onDone: () => void }) {
       }
     }
 
-    setTimeout(() => setPhase("budget"), hasSupabase ? 500 : 1500);
+    setTimeout(() => {
+      setProfName(username);
+      setProfBio(user.bio);
+      setProfCampus(campus);
+      setPhase("profile");
+    }, hasSupabase ? 500 : 1500);
   };
 
   return (
@@ -190,13 +204,87 @@ export function Login({ onDone }: { onDone: () => void }) {
               Dengan masuk, kamu setuju Syarat & Ketentuan Nakam.
             </p>
           </motion.div>
+        ) : phase === "profile" ? (
+          <motion.div
+            key="profile"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={spring}
+            className="relative z-10 flex h-full w-full md:max-w-md md:mx-auto flex-col overflow-y-auto px-6 pt-14 pb-8"
+          >
+            <div className="mb-3 flex items-center gap-2 text-xs text-white/60">
+              <span className="rounded-full bg-white/10 px-2 py-0.5">Step 1/2</span>
+              Atur Profil
+            </div>
+            <h1 className="text-3xl tracking-tight" style={{ fontWeight: 800 }}>
+              Halo!<br />Siapa namamu?
+            </h1>
+            <p className="mt-2 text-sm text-white/60">
+              Biar teman-temanmu mudah mengenali kamu di peta.
+            </p>
+
+            <div className="mt-7 flex flex-col gap-4">
+              <Field
+                label="Nama Panggilan"
+                value={profName}
+                onChange={setProfName}
+                placeholder="Rangga"
+              />
+              <Field
+                label="Bio Singkat"
+                value={profBio}
+                onChange={setProfBio}
+                placeholder="Pemburu warkop murah 🍜"
+              />
+              
+              <div>
+                <label className="mb-1.5 block text-xs text-white/70" style={{ fontWeight: 600 }}>
+                  Kampus
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["UMM", "UM", "UB", "UNISMA"].map((c) => (
+                    <motion.button
+                      key={c}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setProfCampus(c)}
+                      className={`rounded-xl border py-3 text-sm transition-colors ${
+                        profCampus === c 
+                          ? "border-[#FF8C42] bg-[#FF8C42]/20 text-[#FF8C42]" 
+                          : "border-white/15 bg-white/5 text-white/70"
+                      }`}
+                      style={{ fontWeight: profCampus === c ? 700 : 500 }}
+                    >
+                      {c}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 min-h-[40px]" />
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              transition={spring}
+              onClick={() => {
+                setUser({ ...user, name: profName || username, bio: profBio, avatar: (profName || username)[0].toUpperCase() });
+                setCampus(profCampus);
+                setPhase("budget");
+              }}
+              className="mt-6 w-full rounded-2xl bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] py-4 text-white shadow-lg shadow-[#FF6B1A]/40"
+              style={{ fontWeight: 700 }}
+            >
+              Lanjut ke Budget →
+            </motion.button>
+          </motion.div>
         ) : (
           <motion.div
             key="budget"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={spring}
-            className="relative z-10 flex h-full flex-col overflow-y-auto px-6 pt-14 pb-8"
+            className="relative z-10 flex h-full w-full max-w-md mx-auto flex-col overflow-y-auto px-6 pt-14 pb-8"
           >
             <div className="mb-3 flex items-center gap-2 text-xs text-white/60">
               <span className="rounded-full bg-white/10 px-2 py-0.5">Step 2/2</span>

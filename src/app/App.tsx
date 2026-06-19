@@ -20,19 +20,8 @@ function Inner() {
   const { theme } = useStore();
 
   return (
-    <div className={`relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden p-0 sm:p-6 ${theme === "dark" ? "bg-[#020617]" : "bg-gradient-to-br from-slate-100 via-white to-slate-200"}`}>
-      {/* Ambient background blobs on wider screens */}
-      <div className="pointer-events-none absolute inset-0 hidden sm:block">
-        <div className="absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-orange-300/20 blur-3xl" />
-        <div className="absolute -right-32 bottom-1/4 h-96 w-96 rounded-full bg-blue-300/20 blur-3xl" />
-      </div>
-      <div
-        className="relative overflow-hidden bg-white shadow-2xl ring-black/90 sm:rounded-[44px] sm:ring-[10px]"
-        style={{
-          width: "min(100vw, 420px)",
-          height: "min(100dvh, 910px)",
-        }}
-      >
+    <div className={`relative flex min-h-[100dvh] w-full overflow-hidden p-0 ${theme === "dark" ? "bg-[#020617]" : "bg-white"}`}>
+      <div className="relative w-full h-[100dvh] overflow-hidden bg-white text-slate-900">
         <AnimatePresence>
           {phase === "splash" && (
             <Splash key="splash" onDone={() => setPhase("login")} />
