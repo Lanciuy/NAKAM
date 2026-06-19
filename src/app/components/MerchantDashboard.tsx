@@ -268,7 +268,7 @@ function Dashboard({ onBack }: { onBack: () => void }) {
   const {
     merchant, setMerchantStatus, setMerchantInfo,
     addMenuItem, updateMenuItem, removeMenuItem, toggleMenuAvailable,
-    pushMockOrder, completeOrder,
+    pushMockOrder, completeOrder, deleteStore
   } = useStore();
   const [tab, setTab] = useState<"home" | "menu" | "order" | "info">("home");
   const [showBanner, setShowBanner] = useState(false);
@@ -510,6 +510,22 @@ function Dashboard({ onBack }: { onBack: () => void }) {
                       );
                     })}
                   </div>
+                </div>
+
+                <div className="mt-8 pt-6 border-t border-red-500/20">
+                  <h3 className="text-sm font-bold text-red-400">Zona Berbahaya</h3>
+                  <p className="mt-1 text-xs text-red-400/60 mb-3">Tindakan ini tidak dapat dibatalkan. Semua data toko dan menu akan dihapus permanen.</p>
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Yakin ingin menghapus tokomu secara permanen?")) {
+                        deleteStore();
+                        onBack();
+                      }
+                    }}
+                    className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 py-3.5 text-sm font-bold text-red-400"
+                  >
+                    Hapus Toko Permanen
+                  </button>
                 </div>
               </div>
             </motion.div>

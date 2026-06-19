@@ -3,7 +3,7 @@ import { supabase, isSupabaseConfigured } from "./supabase";
 import {
   fetchProfile, upsertProfile,
   fetchTransactions, addTransactionToSupabase,
-  fetchMerchant, upsertMerchant, updateMerchantStatus, updateMerchantInfo,
+  fetchMerchant, upsertMerchant, updateMerchantStatus, updateMerchantInfo, deleteMerchant,
   addMenuItemToSupabase, updateMenuItemInSupabase, deleteMenuItemFromSupabase,
   completeOrderInSupabase, insertMockOrder, incrementMerchantViews,
 } from "./supabaseData";
@@ -90,6 +90,7 @@ type Store = {
   toggleMenuAvailable: (id: string) => void;
   pushMockOrder: () => void;
   completeOrder: (id: string) => void;
+  deleteStore: () => Promise<void>;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -208,6 +209,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         emoji: m.emoji,
         status: m.status as "buka" | "ramai" | "tutup",
         price: m.price,
+        lat: m.lat,
+        lng: m.lng,
         menu: m.menu,
         orders: m.orders,
         views: m.views,
@@ -409,6 +412,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       };
     });
     completeOrderInSupabase(id);
+  };
+
+  const deleteStore = async () => {
+    if (merchantDbId) {
+      await deleteMerchant(merchantDbId);
+    }
+    setMerchantDbId(null);
+    setMerchant({
+      onboarded: false,
+      name: "",
+      campus: "UMM",
+      emoji: "🍜",
+      status: "buka",
+      price: "10k - 25k",
+      lat: 0,
+      lng: 0,
+      menu: [],
+      orders: [],
+      views: 0,
+    });
   };
 
   return (

@@ -249,6 +249,37 @@ export async function upsertMerchant(
   }
 }
 
+export async function deleteMerchant(merchantDbId: string): Promise<void> {
+  if (!supabase || !merchantDbId) return;
+  try {
+    await supabase.from("merchants").delete().eq("id", merchantDbId);
+  } catch {
+    // silently fail
+  }
+}
+
+export async function adminAddMerchant(
+  data: { name: string; campus: string; emoji: string; price: string; lat: number; lng: number }
+): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { error } = await supabase.from("merchants").insert({
+      name: data.name,
+      campus: data.campus,
+      emoji: data.emoji,
+      price_range: data.price,
+      lat: data.lat,
+      lng: data.lng,
+      onboarded: true,
+      status: "buka",
+      // user_id is intentionally omitted for admin-created stores
+    });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
 export async function updateMerchantStatus(merchantDbId: string, status: string): Promise<void> {
   if (!supabase || !merchantDbId) return;
   try {

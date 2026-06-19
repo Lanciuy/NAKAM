@@ -6,6 +6,7 @@ import { HomeMap } from "./components/HomeMap";
 import { MerchantDashboard } from "./components/MerchantDashboard";
 import { WalletScreen } from "./components/Wallet";
 import { ProfileScreen } from "./components/Profile";
+import { AdminPanel } from "./components/AdminPanel";
 import { StoreProvider, useStore } from "./store";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
@@ -17,6 +18,7 @@ function Inner() {
   const [walletOpen, setWalletOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [merchantOpen, setMerchantOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const { theme } = useStore();
 
   return (
@@ -52,10 +54,12 @@ function Inner() {
               key="profile"
               onBack={() => setProfileOpen(false)}
               onOpenMerchant={() => setMerchantOpen(true)}
+              onOpenAdmin={() => setAdminOpen(true)}
               onLogout={() => {
                 setProfileOpen(false);
                 setWalletOpen(false);
                 setMerchantOpen(false);
+                setAdminOpen(false);
                 setPhase("login");
               }}
             />
@@ -63,6 +67,9 @@ function Inner() {
         </AnimatePresence>
         <AnimatePresence>
           {merchantOpen && <MerchantDashboard key="merchant" onBack={() => setMerchantOpen(false)} />}
+        </AnimatePresence>
+        <AnimatePresence>
+          {adminOpen && <AdminPanel key="admin" onBack={() => setAdminOpen(false)} />}
         </AnimatePresence>
       </div>
     </div>
