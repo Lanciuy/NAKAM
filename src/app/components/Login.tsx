@@ -1,22 +1,60 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Eye, EyeOff, Utensils, MapPin, Loader2, Wallet } from "lucide-react";
+import { Eye, EyeOff, Utensils, MapPin, Loader2, Wallet, AlertCircle } from "lucide-react";
 import { useStore, fmtRp } from "../store";
 import { NakamLogo } from "./Logo";
+import { isSupabaseConfigured } from "../supabase";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 export function Login({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState<"login" | "loading" | "budget">("login");
+  const [phase, setPhase] = useState<"login" | "loading" | "budget" | "register">("login");
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
-  const { setBudget } = useStore();
+  const [error, setError] = useState<string | null>(null);
+  const { setBudget, login, signUp } = useStore();
   const [target, setTarget] = useState("1500000");
+  const hasSupabase = isSupabaseConfigured();
 
-  const submit = () => {
+  const submit = async () => {
+    setError(null);
     setPhase("loading");
-    setTimeout(() => setPhase("budget"), 1500);
+
+    if (hasSupabase) {
+      const err = await login(email, pass);
+      if (err) {
+        setError(err);
+        setPhase("login");
+        return;
+      }
+    }
+
+    setTimeout(() => setPhase("budget"), hasSupabase ? 500 : 1500);
+  };
+
+  const handleRegister = async () => {
+    setError(null);
+    if (!email || !pass) {
+      setError("Email dan password wajib diisi!");
+      return;
+    }
+    if (pass.length < 6) {
+      setError("Password minimal 6 karakter!");
+      return;
+    }
+    setPhase("loading");
+
+    if (hasSupabase) {
+      const err = await signUp(email, pass);
+      if (err) {
+        setError(err);
+        setPhase("register");
+        return;
+      }
+    }
+
+    setTimeout(() => setPhase("budget"), hasSupabase ? 500 : 1500);
   };
 
   return (
@@ -29,9 +67,9 @@ export function Login({ onDone }: { onDone: () => void }) {
       <div className="absolute bottom-0 -right-20 h-80 w-80 rounded-full bg-[#3B82F6] opacity-30 blur-3xl" />
 
       <AnimatePresence mode="wait">
-        {phase !== "budget" ? (
+        {(phase === "login" || phase === "register" || phase === "loading") ? (
           <motion.div
-            key="login"
+            key={phase === "register" ? "register" : "login"}
             exit={{ opacity: 0, x: -50 }}
             transition={spring}
             className="relative z-10 flex h-full flex-col overflow-y-auto px-6 pt-12 pb-8"
@@ -52,8 +90,23 @@ export function Login({ onDone }: { onDone: () => void }) {
             </motion.div>
 
             <div className="flex flex-1 flex-col justify-center gap-4">
+              {/* Error message */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex items-center gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+                  >
+                    <AlertCircle size={16} />
+                    {error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <Field
-                label="Email kampus atau Username"
+                label={phase === "register" ? "Email kampus" : "Email kampus atau Username"}
                 value={email}
                 onChange={setEmail}
                 placeholder="nama@webmail.umm.ac.id"
@@ -71,35 +124,66 @@ export function Login({ onDone }: { onDone: () => void }) {
                 }
               />
 
-              <div className="flex justify-end">
-                <button className="text-xs text-white/60">Lupa password?</button>
-              </div>
+              {phase !== "register" && (
+                <div className="flex justify-end">
+                  <button className="text-xs text-white/60">Lupa password?</button>
+                </div>
+              )}
 
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                disabled={phase === "loading"}
-                transition={spring}
-                onClick={submit}
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] py-4 text-white shadow-lg shadow-[#FF6B1A]/40 disabled:opacity-80"
-                style={{ fontWeight: 700 }}
-              >
-                {phase === "loading" ? (
-                  <Loader2 className="animate-spin" size={20} />
-                ) : (
-                  "Masuk"
-                )}
-              </motion.button>
+              {phase === "register" ? (
+                <>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    disabled={phase === "loading" as any}
+                    transition={spring}
+                    onClick={handleRegister}
+                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] py-4 text-white shadow-lg shadow-[#FF6B1A]/40 disabled:opacity-80"
+                    style={{ fontWeight: 700 }}
+                  >
+                    Daftar Sekarang
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    transition={spring}
+                    onClick={() => { setPhase("login"); setError(null); }}
+                    className="w-full rounded-2xl border border-white/20 bg-white/5 py-4 text-sm text-white/80 backdrop-blur-md"
+                  >
+                    Sudah punya akun?{" "}
+                    <span style={{ fontWeight: 700 }} className="text-[#FF8C42]">
+                      Masuk.
+                    </span>
+                  </motion.button>
+                </>
+              ) : (
+                <>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    disabled={phase === "loading"}
+                    transition={spring}
+                    onClick={submit}
+                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] py-4 text-white shadow-lg shadow-[#FF6B1A]/40 disabled:opacity-80"
+                    style={{ fontWeight: 700 }}
+                  >
+                    {phase === "loading" ? (
+                      <Loader2 className="animate-spin" size={20} />
+                    ) : (
+                      "Masuk"
+                    )}
+                  </motion.button>
 
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                transition={spring}
-                className="w-full rounded-2xl border border-white/20 bg-white/5 py-4 text-sm text-white/80 backdrop-blur-md"
-              >
-                Belum punya akun?{" "}
-                <span style={{ fontWeight: 700 }} className="text-[#FF8C42]">
-                  Daftar dulu.
-                </span>
-              </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    transition={spring}
+                    onClick={() => { setPhase("register"); setError(null); }}
+                    className="w-full rounded-2xl border border-white/20 bg-white/5 py-4 text-sm text-white/80 backdrop-blur-md"
+                  >
+                    Belum punya akun?{" "}
+                    <span style={{ fontWeight: 700 }} className="text-[#FF8C42]">
+                      Daftar dulu.
+                    </span>
+                  </motion.button>
+                </>
+              )}
             </div>
 
             <p className="mt-6 text-center text-xs text-white/40">

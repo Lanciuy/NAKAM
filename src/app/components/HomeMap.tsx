@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, User, MapPin, Dice5, Wallet, Eye, EyeOff, ChevronDown, Check, X,
@@ -8,6 +8,7 @@ import { EateryDetail } from "./EateryDetail";
 import { Navigator } from "./Navigator";
 import { useStore, fmtRp } from "../store";
 import { EATERIES_BY_CAMPUS } from "../data";
+import { fetchEateriesFromSupabase } from "../supabaseData";
 import confetti from "canvas-confetti";
 import { NakamLogo } from "./Logo";
 
@@ -37,6 +38,20 @@ export function HomeMap({
   const [navTarget, setNavTarget] = useState<any>(null);
   const userPos = { x: 50, y: 86 };
   const { campus, setCampus, hideBalance, toggleHideBalance, budget, spent, merchant } = useStore();
+  const [supabaseEateries, setSupabaseEateries] = useState<any[] | null>(null);
+
+  // Load eateries from Supabase when campus changes
+  useEffect(() => {
+    let cancelled = false;
+    fetchEateriesFromSupabase(campus).then((data) => {
+      if (!cancelled && data && data.length > 0) {
+        setSupabaseEateries(data);
+      } else if (!cancelled) {
+        setSupabaseEateries(null); // fallback to hardcoded
+      }
+    });
+    return () => { cancelled = true; };
+  }, [campus]);
 
   const merchantEatery = merchant.onboarded && merchant.campus === campus ? {
     id: "merchant-self",
@@ -53,7 +68,8 @@ export function HomeMap({
     emoji: merchant.emoji,
   } : null;
 
-  const baseList = [...(EATERIES_BY_CAMPUS[campus] || []), ...(merchantEatery ? [merchantEatery] : [])];
+  const eateriesSource = supabaseEateries || EATERIES_BY_CAMPUS[campus] || [];
+  const baseList = [...eateriesSource, ...(merchantEatery ? [merchantEatery] : [])];
   
   let eateries = baseList.filter((e: any) => {
     if (!activeFilter) return true;

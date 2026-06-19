@@ -1,4 +1,13 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { supabase, isSupabaseConfigured } from "./supabase";
+import {
+  fetchProfile, upsertProfile,
+  fetchTransactions, addTransactionToSupabase,
+  fetchMerchant, upsertMerchant, updateMerchantStatus, updateMerchantInfo,
+  addMenuItemToSupabase, updateMenuItemInSupabase, deleteMenuItemFromSupabase,
+  completeOrderInSupabase, insertMockOrder, incrementMerchantViews,
+} from "./supabaseData";
+import type { User } from "@supabase/supabase-js";
 
 export type Transaction = {
   id: string;
@@ -39,8 +48,16 @@ export type Merchant = {
 };
 
 type Store = {
+  // Auth
+  supabaseUser: User | null;
+  authLoading: boolean;
+  login: (email: string, password: string) => Promise<string | null>;
+  signUp: (email: string, password: string) => Promise<string | null>;
+  logout: () => Promise<void>;
+  // Theme
   theme: "light" | "dark";
   toggleTheme: () => void;
+  // Budget & Wallet
   budget: number;
   setBudget: (n: number) => void;
   spent: number;
@@ -48,15 +65,20 @@ type Store = {
   transactions: Transaction[];
   hideBalance: boolean;
   toggleHideBalance: () => void;
+  // Campus
   campus: string;
   setCampus: (c: string) => void;
+  // Settings
   ghostMode: boolean;
   setGhostMode: (v: boolean) => void;
   showExpense: boolean;
   setShowExpense: (v: boolean) => void;
+  // User profile
   user: { name: string; bio: string; avatar: string };
   setUser: (u: Store["user"]) => void;
+  // Merchant
   merchant: Merchant;
+  merchantDbId: string | null;
   finishOnboarding: (data: { name: string; campus: string; emoji: string; price: string; menu: MerchantMenuItem[] }) => void;
   setMerchantStatus: (s: Merchant["status"]) => void;
   setMerchantInfo: (info: Partial<Pick<Merchant, "name" | "emoji" | "price" | "campus">>) => void;
@@ -73,31 +95,34 @@ const Ctx = createContext<Store | null>(null);
 const MOCK_ORDER_POOL = ["Nasi Goreng", "Es Teh Jumbo", "Mie Godog", "Indomie Telor", "Geprek Lvl 3", "Kopi Susu"];
 
 export function StoreProvider({ children }: { children: ReactNode }) {
+  // ─── Auth ───
+  const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // ─── Theme ───
   const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem("theme") as "light" | "dark") || "light");
-  const [budget, setBudget] = useState(() => parseInt(localStorage.getItem("budget") || "0", 10));
+
+  // ─── Budget & Wallet ───
+  const [budget, setBudgetState] = useState(() => parseInt(localStorage.getItem("budget") || "0", 10));
   const [hideBalance, setHide] = useState(() => localStorage.getItem("hideBalance") === "true");
-  const [campus, setCampus] = useState(() => localStorage.getItem("campus") || "Kampus 1");
-  const [ghostMode, setGhostMode] = useState(false);
-  const [showExpense, setShowExpense] = useState(true);
-  const [user, setUser] = useState({
-    name: "Rangga Pratama",
-    bio: "Mahasiswa · Pemburu warkop murah 🍜",
-    avatar: "R",
-  });
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     const saved = localStorage.getItem("transactions");
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem("theme", theme);
-    localStorage.setItem("budget", budget.toString());
-    localStorage.setItem("hideBalance", hideBalance.toString());
-    localStorage.setItem("campus", campus);
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-  }, [theme, budget, hideBalance, campus, transactions]);
+  // ─── Campus & Settings ───
+  const [campus, setCampusState] = useState(() => localStorage.getItem("campus") || "UMM");
+  const [ghostMode, setGhostMode] = useState(false);
+  const [showExpense, setShowExpense] = useState(true);
 
+  // ─── User Profile ───
+  const [user, setUserState] = useState({
+    name: "Rangga Pratama",
+    bio: "Mahasiswa · Pemburu warkop murah 🍜",
+    avatar: "R",
+  });
+
+  // ─── Merchant ───
   const [merchant, setMerchant] = useState<Merchant>({
     onboarded: false,
     name: "",
@@ -109,44 +134,257 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     orders: [],
     views: 0,
   });
+  const [merchantDbId, setMerchantDbId] = useState<string | null>(null);
 
+  // ─── Sync localStorage ───
+  useEffect(() => {
+    localStorage.setItem("theme", theme);
+    localStorage.setItem("budget", budget.toString());
+    localStorage.setItem("hideBalance", hideBalance.toString());
+    localStorage.setItem("campus", campus);
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+  }, [theme, budget, hideBalance, campus, transactions]);
+
+  // ─── Auth: Listen for session changes ───
+  useEffect(() => {
+    if (!supabase) {
+      setAuthLoading(false);
+      return;
+    }
+
+    // Check existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSupabaseUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserData(session.user.id);
+      }
+      setAuthLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSupabaseUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserData(session.user.id);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ─── Load all user data from Supabase ───
+  const loadUserData = useCallback(async (userId: string) => {
+    // Load profile
+    const profile = await fetchProfile(userId);
+    if (profile) {
+      setUserState({ name: profile.name, bio: profile.bio, avatar: profile.avatar });
+      setCampusState(profile.campus || "UMM");
+      setBudgetState(profile.budget || 1500000);
+      if (profile.theme === "dark" || profile.theme === "light") {
+        setTheme(profile.theme);
+      }
+    }
+
+    // Load transactions
+    const txs = await fetchTransactions(userId);
+    if (txs) {
+      setTransactions(txs);
+    }
+
+    // Load merchant
+    const m = await fetchMerchant(userId);
+    if (m) {
+      setMerchantDbId(m.dbId);
+      setMerchant({
+        onboarded: m.onboarded,
+        name: m.name,
+        campus: m.campus,
+        emoji: m.emoji,
+        status: m.status as "buka" | "ramai" | "tutup",
+        price: m.price,
+        menu: m.menu,
+        orders: m.orders,
+        views: m.views,
+      });
+    }
+  }, []);
+
+  // ─── Auth functions ───
+  const login = async (email: string, password: string): Promise<string | null> => {
+    if (!supabase) return null; // No Supabase = allow any login
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return error.message;
+    return null;
+  };
+
+  const signUp = async (email: string, password: string): Promise<string | null> => {
+    if (!supabase) return null;
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return error.message;
+    // Create initial profile
+    if (data.user) {
+      await upsertProfile({
+        id: data.user.id,
+        name: email.split("@")[0] || "Mahasiswa",
+        bio: "Mahasiswa · Pemburu warkop murah 🍜",
+        avatar: (email[0] || "M").toUpperCase(),
+        campus: "UMM",
+        budget: 1500000,
+        theme: "light",
+      });
+    }
+    return null;
+  };
+
+  const logout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    setSupabaseUser(null);
+    setMerchantDbId(null);
+    setMerchant({
+      onboarded: false, name: "", campus: "UMM", emoji: "🍜",
+      status: "buka", price: "10k - 25k", menu: [], orders: [], views: 0,
+    });
+  };
+
+  // ─── Budget ───
+  const setBudget = (n: number) => {
+    setBudgetState(n);
+    if (supabaseUser) {
+      upsertProfile({ id: supabaseUser.id, budget: n });
+    }
+  };
+
+  // ─── Campus ───
+  const setCampus = (c: string) => {
+    setCampusState(c);
+    if (supabaseUser) {
+      upsertProfile({ id: supabaseUser.id, campus: c });
+    }
+  };
+
+  // ─── User profile ───
+  const setUser = (u: { name: string; bio: string; avatar: string }) => {
+    setUserState(u);
+    if (supabaseUser) {
+      upsertProfile({ id: supabaseUser.id, name: u.name, bio: u.bio, avatar: u.avatar });
+    }
+  };
+
+  // ─── Theme ───
+  const toggleTheme = () => {
+    setTheme((t) => {
+      const next = t === "light" ? "dark" : "light";
+      if (supabaseUser) upsertProfile({ id: supabaseUser.id, theme: next });
+      return next;
+    });
+  };
+
+  // ─── Transactions ───
   const spent = transactions.reduce((s, t) => s + t.amount, 0);
 
   const addExpense = (t: Omit<Transaction, "id" | "date">) => {
-    setTransactions((prev) => [
-      { ...t, id: "t" + Date.now() + Math.random().toString(36).substring(2, 9), date: "Baru saja" },
-      ...prev,
-    ]);
+    const newTx: Transaction = {
+      ...t,
+      id: "t" + Date.now() + Math.random().toString(36).substring(2, 9),
+      date: "Baru saja",
+    };
+    setTransactions((prev) => [newTx, ...prev]);
+    if (supabaseUser) {
+      addTransactionToSupabase(supabaseUser.id, t);
+    }
   };
 
-  const finishOnboarding: Store["finishOnboarding"] = ({ name, campus, emoji, price, menu }) => {
-    setMerchant((m) => ({ ...m, onboarded: true, name, campus, emoji, price, menu, views: 12 }));
+  // ─── Merchant ───
+  const finishOnboarding: Store["finishOnboarding"] = async ({ name, campus: mc, emoji, price, menu: menuItems }) => {
+    setMerchant((m) => ({ ...m, onboarded: true, name, campus: mc, emoji, price, menu: menuItems, views: 12 }));
+
+    if (supabaseUser) {
+      const dbId = await upsertMerchant(supabaseUser.id, { name, campus: mc, emoji, price, onboarded: true });
+      if (dbId) {
+        setMerchantDbId(dbId);
+        // Add menu items
+        for (const item of menuItems) {
+          const itemId = await addMenuItemToSupabase(dbId, { name: item.name, price: item.price, emoji: item.emoji, available: item.available });
+          if (itemId) item.id = itemId;
+        }
+      }
+    }
   };
-  const setMerchantStatus = (s: Merchant["status"]) => setMerchant((m) => ({ ...m, status: s }));
-  const setMerchantInfo: Store["setMerchantInfo"] = (info) => setMerchant((m) => ({ ...m, ...info }));
-  const addMenuItem: Store["addMenuItem"] = (item) =>
-    setMerchant((m) => ({ ...m, menu: [...m.menu, { ...item, id: "m" + Date.now() + Math.random().toString(36).substring(2, 9), sold: 0 }] }));
-  const updateMenuItem: Store["updateMenuItem"] = (id, patch) =>
+
+  const setMerchantStatus = (s: Merchant["status"]) => {
+    setMerchant((m) => ({ ...m, status: s }));
+    if (merchantDbId) updateMerchantStatus(merchantDbId, s);
+  };
+
+  const setMerchantInfo: Store["setMerchantInfo"] = (info) => {
+    setMerchant((m) => ({ ...m, ...info }));
+    if (merchantDbId) {
+      const dbInfo: any = {};
+      if (info.name) dbInfo.name = info.name;
+      if (info.emoji) dbInfo.emoji = info.emoji;
+      if (info.price) dbInfo.price_range = info.price;
+      if (info.campus) dbInfo.campus = info.campus;
+      updateMerchantInfo(merchantDbId, dbInfo);
+    }
+  };
+
+  const addMenuItem: Store["addMenuItem"] = async (item) => {
+    const localId = "m" + Date.now() + Math.random().toString(36).substring(2, 9);
+    const newItem: MerchantMenuItem = { ...item, id: localId, sold: 0 };
+    setMerchant((m) => ({ ...m, menu: [...m.menu, newItem] }));
+
+    if (merchantDbId) {
+      const dbId = await addMenuItemToSupabase(merchantDbId, { name: item.name, price: item.price, emoji: item.emoji, available: item.available });
+      if (dbId) {
+        setMerchant((m) => ({ ...m, menu: m.menu.map((x) => (x.id === localId ? { ...x, id: dbId } : x)) }));
+      }
+    }
+  };
+
+  const updateMenuItem: Store["updateMenuItem"] = (id, patch) => {
     setMerchant((m) => ({ ...m, menu: m.menu.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
-  const removeMenuItem = (id: string) => setMerchant((m) => ({ ...m, menu: m.menu.filter((x) => x.id !== id) }));
-  const toggleMenuAvailable = (id: string) =>
-    setMerchant((m) => ({ ...m, menu: m.menu.map((x) => (x.id === id ? { ...x, available: !x.available } : x)) }));
-  const pushMockOrder = () => {
+    updateMenuItemInSupabase(id, patch);
+  };
+
+  const removeMenuItem = (id: string) => {
+    setMerchant((m) => ({ ...m, menu: m.menu.filter((x) => x.id !== id) }));
+    deleteMenuItemFromSupabase(id);
+  };
+
+  const toggleMenuAvailable = (id: string) => {
     setMerchant((m) => {
-      const item = m.menu.length
-        ? m.menu[Math.floor(Math.random() * m.menu.length)].name
-        : MOCK_ORDER_POOL[Math.floor(Math.random() * MOCK_ORDER_POOL.length)];
-      return {
-        ...m,
-        orders: [
-          { id: "o" + Date.now() + Math.random().toString(36).substring(2, 9), item, qty: 1 + Math.floor(Math.random() * 3), time: "Baru saja", status: "baru" },
-          ...m.orders,
-        ].slice(0, 10),
-        views: m.views + Math.floor(Math.random() * 30) + 5,
-      };
+      const item = m.menu.find((x) => x.id === id);
+      if (item) updateMenuItemInSupabase(id, { available: !item.available });
+      return { ...m, menu: m.menu.map((x) => (x.id === id ? { ...x, available: !x.available } : x)) };
     });
   };
-  const completeOrder = (id: string) =>
+
+  const pushMockOrder = async () => {
+    const item = merchant.menu.length
+      ? merchant.menu[Math.floor(Math.random() * merchant.menu.length)].name
+      : MOCK_ORDER_POOL[Math.floor(Math.random() * MOCK_ORDER_POOL.length)];
+    const qty = 1 + Math.floor(Math.random() * 3);
+    const localId = "o" + Date.now() + Math.random().toString(36).substring(2, 9);
+    const viewsIncrement = Math.floor(Math.random() * 30) + 5;
+
+    setMerchant((m) => ({
+      ...m,
+      orders: [{ id: localId, item, qty, time: "Baru saja", status: "baru" }, ...m.orders].slice(0, 10),
+      views: m.views + viewsIncrement,
+    }));
+
+    if (merchantDbId) {
+      const dbId = await insertMockOrder(merchantDbId, item, qty);
+      if (dbId) {
+        setMerchant((m) => ({ ...m, orders: m.orders.map((o) => (o.id === localId ? { ...o, id: dbId } : o)) }));
+      }
+      incrementMerchantViews(merchantDbId, viewsIncrement);
+    }
+  };
+
+  const completeOrder = (id: string) => {
     setMerchant((m) => {
       const o = m.orders.find((x) => x.id === id);
       return {
@@ -155,12 +393,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         menu: o ? m.menu.map((x) => (x.name === o.item ? { ...x, sold: x.sold + o.qty } : x)) : m.menu,
       };
     });
+    completeOrderInSupabase(id);
+  };
 
   return (
     <Ctx.Provider
       value={{
+        supabaseUser,
+        authLoading,
+        login,
+        signUp,
+        logout,
         theme,
-        toggleTheme: () => setTheme((t) => (t === "light" ? "dark" : "light")),
+        toggleTheme,
         budget,
         setBudget,
         spent,
@@ -177,6 +422,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         user,
         setUser,
         merchant,
+        merchantDbId,
         finishOnboarding,
         setMerchantStatus,
         setMerchantInfo,
