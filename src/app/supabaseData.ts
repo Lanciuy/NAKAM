@@ -14,8 +14,8 @@ type EateryRow = {
   tags: string[];
   filters: string[];
   campus: string;
-  x: number;
-  y: number;
+  lat: number;
+  lng: number;
   gallery: string[];
 };
 
@@ -31,7 +31,7 @@ type EateryMenuRow = {
 
 export async function fetchEateriesFromSupabase(
   campus: string
-): Promise<(Eatery & { x: number; y: number; campus: string; filter: string[] })[] | null> {
+): Promise<(Eatery & { lat: number; lng: number; campus: string; filter: string[] })[] | null> {
   if (!supabase) return null;
   try {
     const { data: eateries, error } = await supabase
@@ -68,8 +68,8 @@ export async function fetchEateriesFromSupabase(
         emoji: m.emoji || "🍽️",
       })),
       gallery: e.gallery || [e.image],
-      x: e.x || 50,
-      y: e.y || 50,
+      lat: e.lat || -7.95,
+      lng: e.lng || 112.61,
       campus: e.campus,
       filter: e.filters || [],
     }));

@@ -11,8 +11,35 @@ import { EATERIES_BY_CAMPUS } from "../data";
 import { fetchEateriesFromSupabase } from "../supabaseData";
 import confetti from "canvas-confetti";
 import { NakamLogo } from "./Logo";
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
+
+const createMarkerIcon = (isMine: boolean, emoji: string) => {
+  return L.divIcon({
+    className: '',
+    html: isMine 
+      ? `<div class="relative"><span class="absolute inset-0 -m-2 animate-ping rounded-full bg-emerald-400/40"></span><div class="relative flex h-12 w-12 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-emerald-500 to-emerald-600 text-xl shadow-xl">${emoji || '🍜'}</div><div class="absolute left-1/2 top-full mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] text-white shadow" style="font-weight:700">TOKOMU</div></div>`
+      : `<div class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-[#1a1f4d] text-white shadow-xl"><svg width="18" height="18" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>`,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20]
+  });
+};
+
+const userIcon = L.divIcon({
+  className: '',
+  html: `<div class="relative"><span class="absolute inset-0 -m-4 animate-ping rounded-full bg-blue-500/30"></span><span class="absolute inset-0 -m-2 rounded-full bg-blue-500/20"></span><div class="relative h-5 w-5 rounded-full border-[3px] border-white bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.8)]"></div><div class="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-blue-500 px-2 py-0.5 text-[9px] text-white shadow" style="font-weight:700">KAMU</div></div>`,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10]
+});
+
+function MapUpdater({ center, zoom }: { center: [number, number], zoom?: number }) {
+  const map = useMap();
+  useEffect(() => { map.flyTo(center, zoom || map.getZoom()); }, [center, zoom, map]);
+  return null;
+}
 
 const FILTERS = ["⭐ Rating Tertinggi", "💸 Penyelamat Akhir Bulan", "🍚 Porsi Kuli", "🔌 Spot Nugas", "🅿️ Bebas Parkir"];
 const CAMPUSES = [
@@ -36,9 +63,20 @@ export function HomeMap({
   const [dragging, setDragging] = useState(false);
   const [routeTarget, setRouteTarget] = useState<any>(null);
   const [navTarget, setNavTarget] = useState<any>(null);
-  const userPos = { x: 50, y: 86 };
+  const [userPos, setUserPos] = useState({ lat: -7.9213, lng: 112.5990 }); // Default UMM
   const { campus, setCampus, hideBalance, toggleHideBalance, budget, spent, merchant } = useStore();
   const [supabaseEateries, setSupabaseEateries] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (err) => console.log(err),
+        { enableHighAccuracy: true }
+      );
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
+  }, []);
 
   // Load eateries from Supabase when campus changes
   useEffect(() => {
@@ -63,7 +101,7 @@ export function HomeMap({
     tags: ["Toko Kamu", merchant.status === "buka" ? "Buka" : merchant.status === "ramai" ? "Ramai" : "Tutup"],
     menu: merchant.menu.filter((m) => m.available).map((m) => ({ name: m.name, price: m.price, emoji: m.emoji })),
     gallery: ["https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800"],
-    x: 50, y: 50, campus, filter: [],
+    lat: userPos.lat, lng: userPos.lng, campus, filter: [],
     isMine: true,
     emoji: merchant.emoji,
   } : null;
@@ -127,9 +165,14 @@ export function HomeMap({
   const lowBalance = remaining / budget < 0.15;
 
   const distanceKm = (e: any) => {
-    const dx = (e.x - userPos.x) * 0.012;
-    const dy = (e.y - userPos.y) * 0.012;
-    return Math.max(0.1, Math.sqrt(dx * dx + dy * dy));
+    const R = 6371; // km
+    const dLat = (e.lat - userPos.lat) * Math.PI / 180;
+    const dLng = (e.lng - userPos.lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(userPos.lat * Math.PI / 180) * Math.cos(e.lat * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return Math.max(0.1, R * c);
   };
 
   return (
@@ -139,31 +182,31 @@ export function HomeMap({
       className="relative h-full w-full overflow-hidden bg-[#E8EEF4]"
     >
       {/* Map Layer */}
-      <motion.div
-        animate={{ filter: dragging ? "blur(2px)" : "blur(0px)" }}
-        className="absolute inset-0"
-        onPointerDown={() => setDragging(true)}
-        onPointerUp={() => setDragging(false)}
-        onPointerLeave={() => setDragging(false)}
-      >
-        <MapBackground />
+      <div className="absolute inset-0 z-0">
+        <MapContainer center={[userPos.lat, userPos.lng]} zoom={15} zoomControl={false} className="h-full w-full" style={{ background: '#E8EEF4' }}>
+          <TileLayer 
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+            attribution="&copy; OpenStreetMap"
+            className="map-tiles"
+          />
+          
+          <Marker position={[userPos.lat, userPos.lng]} icon={userIcon} />
 
-        {/* Route overlay */}
-        <AnimatePresence>
+          {eateries.map((e: any) => (
+            <Marker 
+              key={e.id} 
+              position={[e.lat, e.lng]} 
+              icon={createMarkerIcon(e.isMine, e.emoji)}
+              eventHandlers={{ click: () => setSelected(e) }}
+            />
+          ))}
+
           {routeTarget && (
-            <RouteLine key={routeTarget.id} from={userPos} to={{ x: routeTarget.x, y: routeTarget.y }} />
+            <Polyline positions={[[userPos.lat, userPos.lng], [routeTarget.lat, routeTarget.lng]]} color="#FF6B1A" weight={4} dashArray="8 8" />
           )}
-        </AnimatePresence>
 
-        {/* User location */}
-        <div style={{ left: `${userPos.x}%`, top: `${userPos.y}%` }} className="absolute -translate-x-1/2 -translate-y-1/2">
-          <span className="absolute inset-0 -m-4 animate-ping rounded-full bg-blue-500/30" />
-          <span className="absolute inset-0 -m-2 rounded-full bg-blue-500/20" />
-          <div className="relative h-5 w-5 rounded-full border-[3px] border-white bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.8)]" />
-          <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-blue-500 px-2 py-0.5 text-[9px] text-white shadow" style={{fontWeight:700}}>
-            KAMU
-          </div>
-        </div>
+          <MapUpdater center={selected ? [selected.lat, selected.lng] : routeTarget ? [userPos.lat, userPos.lng] : [userPos.lat, userPos.lng]} />
+        </MapContainer>
 
         {/* Skeleton overlay during campus switch */}
         <AnimatePresence>
@@ -179,39 +222,7 @@ export function HomeMap({
             </motion.div>
           )}
         </AnimatePresence>
-
-        <AnimatePresence>
-          {eateries.map((e: any) => (
-            <motion.button
-              key={e.id}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              whileTap={{ scale: 0.9 }}
-              transition={spring}
-              onClick={() => setSelected(e)}
-              style={{ left: `${e.x}%`, top: `${e.y}%` }}
-              className="absolute -translate-x-1/2 -translate-y-1/2"
-            >
-              {e.isMine ? (
-                <div className="relative">
-                  <span className="absolute inset-0 -m-2 animate-ping rounded-full bg-emerald-400/40" />
-                  <div className="relative flex h-12 w-12 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-emerald-500 to-emerald-600 text-xl shadow-xl">
-                    {e.emoji || merchantEatery?.name?.[0]}
-                  </div>
-                  <div className="absolute left-1/2 top-full mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] text-white shadow" style={{fontWeight:700}}>
-                    TOKOMU
-                  </div>
-                </div>
-              ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-[#1a1f4d] text-white shadow-xl">
-                  <MapPin size={18} fill="white" />
-                </div>
-              )}
-            </motion.button>
-          ))}
-        </AnimatePresence>
-      </motion.div>
+      </div>
 
       {/* Top Header */}
       <div className="absolute left-0 right-0 top-0 z-20 px-4 pt-12">
@@ -388,31 +399,13 @@ export function HomeMap({
   );
 }
 
-function RouteLine({ from, to }: { from: { x: number; y: number }; to: { x: number; y: number } }) {
-  // Curved bezier between two % points
-  const cx = (from.x + to.x) / 2 + (to.y - from.y) * 0.25;
-  const cy = (from.y + to.y) / 2 - (to.x - from.x) * 0.25;
-  const d = `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`;
-  return (
-    <svg className="pointer-events-none absolute inset-0 z-[5] h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="routeG" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#3B82F6" />
-          <stop offset="100%" stopColor="#FF6B1A" />
-        </linearGradient>
-      </defs>
-      <motion.path
-        d={d} stroke="url(#routeG)" strokeWidth="1.1" fill="none" strokeLinecap="round"
-        strokeDasharray="2 1.5"
-        initial={{ pathLength: 0, opacity: 0 }}
-        animate={{ pathLength: 1, opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        vectorEffect="non-scaling-stroke"
-        style={{ filter: "drop-shadow(0 2px 6px rgba(59,130,246,0.4))" }}
-      />
-    </svg>
-  );
+function haversineDistance(pos1: { lat: number; lng: number }, pos2: { lat: number; lng: number }) {
+  const R = 6371;
+  const dLat = (pos2.lat - pos1.lat) * (Math.PI / 180);
+  const dLng = (pos2.lng - pos1.lng) * (Math.PI / 180);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(pos1.lat * (Math.PI / 180)) * Math.cos(pos2.lat * (Math.PI / 180)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 function RouteInfoCard({ target, distance, onClose, onStart }: { target: any; distance: number; onClose: () => void; onStart: () => void }) {
