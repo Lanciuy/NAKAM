@@ -19,12 +19,13 @@ const STEP_TEMPLATES = [
   { icon: ArrowUpRight, dir: "Belok kanan di Indomaret" },
 ];
 
-export function Navigator({ target, distance, onClose }: { target: any; distance: number; onClose: () => void }) {
+export function Navigator({ target, routeData, onCancel }: { target: any; routeData?: any; onCancel: () => void }) {
   const [mode, setMode] = useState<Mode>("walk");
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState(0);
 
-  const totalMin = Math.max(1, Math.round((distance / SPEEDS[mode]) * 60));
+  const distance = routeData ? routeData.dist / 1000 : 1.5;
+  const totalMin = routeData ? Math.max(1, Math.round(routeData.dur / 60)) : Math.max(1, Math.round((distance / SPEEDS[mode]) * 60));
   const etaMin = Math.max(0, Math.ceil(totalMin * (1 - progress / 100)));
   const remainingKm = (distance * (1 - progress / 100)).toFixed(2);
 
@@ -60,7 +61,7 @@ export function Navigator({ target, distance, onClose }: { target: any; distance
 
         {/* Top bar */}
         <div className="absolute left-0 right-0 top-0 z-10 flex items-center gap-2 px-4 pt-12">
-          <motion.button whileTap={{scale:0.9}} onClick={onClose} className="rounded-full bg-white/10 p-2 backdrop-blur-xl">
+          <motion.button whileTap={{scale:0.9}} onClick={onCancel} className="rounded-full bg-white/10 p-2 backdrop-blur-xl">
             <ArrowLeft size={16} />
           </motion.button>
           <div className="flex-1 rounded-2xl border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-xl">
