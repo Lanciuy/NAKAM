@@ -100,18 +100,24 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
     const fetchRoute = async () => {
       setFetchingRoute(true);
       try {
-        const profile = routeMode === 'walk' ? 'walking' : routeMode === 'bike' ? 'cycling' : 'driving';
-        const url = `https://router.project-osrm.org/route/v1/${profile}/${userPos.lng},${userPos.lat};${target.lng},${target.lat}?overview=full&geometries=geojson`;
+        // OSRM public demo server reliably supports 'driving'.
+        // We use driving to get the geometry and distance, then calculate duration locally.
+        const url = `https://router.project-osrm.org/route/v1/driving/${userPos.lng},${userPos.lat};${target.lng},${target.lat}?overview=full&geometries=geojson`;
         const res = await fetch(url);
         const data = await res.json();
         
         if (data.routes && data.routes[0]) {
           const route = data.routes[0];
           const coords = route.geometry.coordinates.map((c: any) => [c[1], c[0]] as [number, number]);
+          
+          const dist = route.distance; // meters
+          const speeds = { walk: 5, bike: 25, car: 35 }; // km/h
+          const dur = (dist / 1000) / speeds[routeMode as 'walk'|'bike'|'car'] * 3600;
+
           setRouteData({
             path: coords,
-            dist: route.distance, // meters
-            dur: route.duration   // seconds
+            dist: dist,
+            dur: dur
           });
         }
       } catch (err) {
