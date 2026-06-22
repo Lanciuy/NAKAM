@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Search, User, MapPin, Dice5, Wallet, Eye, EyeOff, ChevronDown, Check, X,
+  Search, User, MapPin, Dice5, Wallet, ChevronDown, Check, X,
   Navigation, Footprints, Bike, Car, Clock, Loader2, Maximize2, Minimize2, Star, ChevronRight, Megaphone
 } from "lucide-react";
 import { EateryDetail } from "./EateryDetail";
@@ -20,7 +20,7 @@ const createMarkerIcon = (isMine: boolean, emoji: string) => {
   return L.divIcon({
     className: '',
     html: isMine 
-      ? `<div class="relative"><span class="absolute inset-0 -m-2 animate-ping rounded-full bg-emerald-400/40"></span><div class="relative flex h-12 w-12 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-emerald-500 to-emerald-600 text-xl shadow-xl">${emoji || '🍜'}</div><div class="absolute left-1/2 top-full mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] text-white shadow" style="font-weight:700">TOKOMU</div></div>`
+      ? `<div class="relative"><span class="absolute inset-0 -m-2 animate-ping rounded-full bg-emerald-400/40"></span><div class="relative flex h-12 w-12 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-emerald-500 to-emerald-600 text-xl shadow-xl">${emoji || '🍜'}</div><div class="absolute left-1/2 top-full mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] text-white shadow" style="font-weight:700">TOKOKU</div></div>`
       : `<div class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-[#1a1f4d] text-white shadow-xl"><svg width="18" height="18" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>`,
     iconSize: [40, 40],
     iconAnchor: [20, 20]
@@ -78,7 +78,7 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
   const [showAllSidebar, setShowAllSidebar] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [userPos, setUserPos] = useState({ lat: -7.9213, lng: 112.5990 }); // Default UMM
+  const [userPos, setUserPos] = useState({ lat: -7.9213, lng: 112.5990 });
   const { campus, setCampus, hideBalance, budget, spent, merchant, globalPromo } = useStore();
   const [supabaseEateries, setSupabaseEateries] = useState<any[] | null>(null);
   const [osmEateries, setOsmEateries] = useState<any[]>([]);
@@ -148,8 +148,8 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
           const route = data.routes[0];
           const coords = route.geometry.coordinates.map((c: any) => [c[1], c[0]] as [number, number]);
           
-          const dist = route.distance; // meters
-          const speeds = { walk: 5, bike: 25, car: 35 }; // km/h
+          const dist = route.distance;
+          const speeds = { walk: 5, bike: 25, car: 35 };
           const dur = (dist / 1000) / speeds[routeMode as 'walk'|'bike'|'car'] * 3600;
 
           setRouteData({
@@ -215,214 +215,124 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
     mapBounds = L.latLngBounds(routeData.path);
   }
 
+  // ──────────────────────────── MOBILE LAYOUT ────────────────────────────
+  // Inspired by Gojek/GoFood: Map fills screen, content overlays from bottom
+  // Desktop: Side-by-side grid with sidebar + map
+
+  const isNavMode = !!navTarget;
+  const isRoutePreview = !!routeTarget;
+
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden bg-[#E8EEF4] p-4 sm:p-6 md:p-8 flex flex-col md:grid md:grid-cols-[420px_1fr] md:grid-rows-[auto_minmax(0,1fr)] gap-4 md:gap-6">
-      
-      {/* Header Panel */}
-      <div className={`md:col-start-1 md:row-start-1 w-full z-10 shrink-0 transition-opacity duration-300 ${(isMapExpanded || navTarget) ? 'opacity-0 pointer-events-none hidden md:block' : 'opacity-100 order-1 md:order-none'}`}>
-        
-        {/* Header Card */}
-        <div className="bg-white/90 rounded-[2rem] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-white/50 flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <NakamLogo size={32} />
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setCampusOpen(true)}
-                className="flex items-center gap-1.5 rounded-full bg-gray-100/80 px-3 py-2 shadow-sm border border-gray-200 hover:bg-gray-200/50 transition-colors"
-              >
-                <span className="text-sm">📍</span>
-                <span className="text-xs text-gray-800" style={{ fontWeight: 800 }}>{campus}</span>
-                <ChevronDown size={14} className="text-gray-500" />
-              </motion.button>
-            </div>
+    <div className="relative w-full h-[100dvh] overflow-hidden bg-[#E8EEF4]">
 
-            <div className="flex items-center gap-2">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={onOpenWallet}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-2 shadow-sm border border-gray-200 transition-colors ${lowBalance ? "bg-red-50 hover:bg-red-100" : "bg-gray-100/80 hover:bg-gray-200/50"}`}
-              >
-                <Wallet size={14} className={lowBalance ? "text-red-500" : "text-[#FF6B1A]"} />
-                <span className="text-xs" style={{fontWeight:800, color: lowBalance ? "#ef4444" : "#1f2937"}}>
-                  {hideBalance ? "••••" : "Rp " + (remaining / 1000).toFixed(0) + "k"}
-                </span>
-              </motion.button>
-              <motion.button whileTap={{ scale: 0.9 }} onClick={onOpenProfile} className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100/80 shadow-sm border border-gray-200 text-gray-700 hover:bg-gray-200/50 transition-colors">
-                <User size={16} />
-              </motion.button>
-            </div>
+      {/* ═══════════ DESKTOP: Side-by-side grid ═══════════ */}
+      <div className="hidden md:grid h-full grid-cols-[420px_1fr] gap-6 p-8">
+        {/* Left Sidebar */}
+        <div className="flex flex-col gap-6 overflow-hidden">
+          {/* Header Card */}
+          <div className="bg-white/90 rounded-[2rem] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-white/50 flex flex-col gap-4 shrink-0">
+            <HeaderBar campus={campus} onCampusOpen={() => setCampusOpen(true)} remaining={remaining} lowBalance={lowBalance} hideBalance={hideBalance} onOpenWallet={onOpenWallet} onOpenProfile={onOpenProfile} />
+            {globalPromo && <PromoBanner text={globalPromo} />}
+            <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+            <FilterChips filters={FILTERS} activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
           </div>
 
-          {/* Promo Banner */}
-          {globalPromo && (
-            <motion.div initial={{opacity:0, y:-10}} animate={{opacity:1, y:0}} className="bg-gradient-to-r from-orange-100 to-red-100 border border-orange-200 rounded-xl p-3 flex gap-3 items-center shadow-sm">
-              <div className="bg-[#FF6B1A] text-white rounded-full p-1.5"><Megaphone size={14}/></div>
-              <p className="text-xs text-orange-900 font-bold flex-1">{globalPromo}</p>
-            </motion.div>
-          )}
-
-          {/* Search */}
-          <div className="flex items-center gap-2.5 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-inner">
-            <Search size={18} className="text-gray-400" />
-            <input 
-              placeholder="Cari warkop, ayam geprek..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-gray-400 text-gray-800" 
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-gray-600">
-                <X size={16} />
+          {/* Nearby List Card */}
+          <div className="flex-1 min-h-0 bg-white/90 rounded-[2rem] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-white/50 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between mb-4 shrink-0">
+              <h3 className="text-lg tracking-tight text-gray-900" style={{fontWeight: 800}}>Terdekat dari Kamu</h3>
+              <button onClick={() => setShowAllSidebar(true)} className="text-xs text-[#FF6B1A] flex items-center gap-1 hover:underline" style={{fontWeight: 700}}>
+                Lihat Semua <ChevronRight size={14}/>
               </button>
-            )}
-            <div className="h-4 w-px bg-gray-200" />
-            <MapPin size={18} className="text-[#FF6B1A]" />
-          </div>
-
-          {/* Filter Chips */}
-          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            {FILTERS.map((f) => {
-              const isActive = activeFilter === f;
-              return (
-                <motion.button
-                  key={f} whileTap={{ scale: 0.95 }} onClick={() => setActiveFilter(isActive ? null : f)}
-                  className={`whitespace-nowrap rounded-full px-4 py-2 text-xs shadow-sm transition-colors ${
-                    isActive ? "bg-[#FF6B1A] text-white border border-[#FF6B1A]" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
-                  }`}
-                  style={{fontWeight: isActive ? 800 : 600}}
-                >
-                  {f}
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Interactive Map Card */}
-      <motion.div 
-        layout
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`md:col-start-2 md:row-span-2 relative shrink-0 w-full h-[240px] md:h-full bg-gray-200 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl border-4 md:border-[6px] border-white transition-all duration-300 ${(isMapExpanded || navTarget) ? '!fixed !inset-4 sm:!inset-6 md:!inset-8 z-50' : 'z-0 order-2 md:order-none'}`}
-      >
-        <MapContainer center={[userPos.lat, userPos.lng]} zoom={15} zoomControl={false} className="h-full w-full" style={{ background: '#E8EEF4' }}>
-          <TileLayer 
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" 
-            attribution="&copy; OpenStreetMap &copy; CARTO"
-          />
-          
-          <Marker position={[userPos.lat, userPos.lng]} icon={userIcon} />
-
-          {eateries.map((e: any) => (
-            <Marker 
-              key={e.id} 
-              position={[e.lat, e.lng]} 
-              icon={e.isOsm ? createOsmMarkerIcon() : createMarkerIcon(e.isMine, e.emoji)}
-              eventHandlers={{ click: () => { setSelected(e); setRouteTarget(null); } }}
-            />
-          ))}
-
-          {routeData && (
-            <Polyline 
-              positions={routeData.path} 
-              color="#3B82F6" 
-              weight={5} 
-              opacity={0.8}
-              lineCap="round"
-              lineJoin="round"
-            />
-          )}
-
-          <MapUpdater 
-            center={selected ? [selected.lat, selected.lng] : (!mapBounds ? [userPos.lat, userPos.lng] : undefined)} 
-            bounds={mapBounds} 
-            zoom={(isMapExpanded || navTarget) ? 16 : 15}
-          />
-        </MapContainer>
-
-        {/* Skeleton overlay during campus switch */}
-        <AnimatePresence>
-          {campusLoading && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 z-[60] flex items-center justify-center bg-white/70 backdrop-blur-md"
-            >
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#FF6B1A] border-t-transparent shadow-lg" />
-                <div className="text-sm text-gray-700" style={{fontWeight:800}}>Memuat Area...</div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Map Controls */}
-        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsMapExpanded(!isMapExpanded)}
-            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/90 shadow-lg backdrop-blur text-gray-700 border border-white hover:bg-white transition-colors"
-          >
-            {isMapExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-          </motion.button>
-        </div>
-      </motion.div>
-
-      {/* Nearby Eateries List Card */}
-      <div className={`md:col-start-1 md:row-start-2 flex flex-col overflow-hidden w-full bg-white/90 rounded-[2rem] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-white/50 relative z-10 transition-opacity duration-300 ${(isMapExpanded || navTarget) ? 'opacity-0 pointer-events-none hidden md:flex' : 'opacity-100 order-3 md:order-none flex-1'}`}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg tracking-tight text-gray-900" style={{fontWeight: 800}}>Terdekat dari Kamu</h3>
-          <button onClick={() => setShowAllSidebar(true)} className="text-xs text-[#FF6B1A] flex items-center gap-1 hover:underline" style={{fontWeight: 700}}>
-            Lihat Semua <ChevronRight size={14}/>
-          </button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto space-y-3 pr-2 no-scrollbar">
-          {eateries.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full opacity-50">
-              <Dice5 size={48} className="mb-2 text-gray-400" />
-              <p className="text-sm font-medium">Tidak ada hasil ditemukan.</p>
             </div>
-          ) : (
-            eateries.slice(0, 4).map((e) => (
-              <motion.div 
-                key={e.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => { setSelected(e); setRouteTarget(null); }}
-                className="flex gap-3 p-2 rounded-2xl bg-white border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-              >
-                <img src={e.image} alt={e.name} className="w-20 h-20 rounded-xl object-cover" />
-                <div className="flex-1 py-1">
-                  <h4 className="text-sm text-gray-900 leading-tight mb-1" style={{fontWeight: 800}}>{e.name}</h4>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-1.5" style={{fontWeight: 600}}>
-                    <span className="flex items-center gap-0.5 text-[#FF8C42]"><Star size={12} fill="currentColor" /> {e.dominance || 80}%</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1"><Footprints size={12}/> {e.walk}</span>
-                  </div>
-                  <div className="text-xs text-gray-800 bg-gray-100 inline-block px-2 py-0.5 rounded-lg font-medium">{e.price}</div>
-                </div>
-              </motion.div>
-            ))
-          )}
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 no-scrollbar">
+              <EateryList eateries={eateries} onSelect={(e) => { setSelected(e); setRouteTarget(null); }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Right Map */}
+        <div className="relative bg-gray-200 rounded-[2.5rem] overflow-hidden shadow-2xl border-[6px] border-white">
+          <MapView userPos={userPos} eateries={eateries} routeData={routeData} selected={selected} setSelected={setSelected} setRouteTarget={setRouteTarget} mapBounds={mapBounds} isExpanded={false} isNavMode={isNavMode} campusLoading={campusLoading} />
+          <div className="absolute top-4 right-4 z-10">
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsMapExpanded(!isMapExpanded)} className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/90 shadow-lg backdrop-blur text-gray-700 border border-white hover:bg-white transition-colors">
+              {isMapExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+            </motion.button>
+          </div>
         </div>
       </div>
 
-      {/* Floating Sidebar for "Show All" */}
+      {/* ═══════════ MOBILE: Gojek-style stacked layout ═══════════ */}
+      <div className="md:hidden flex flex-col h-full">
+        {/* Top Header — hidden during nav/route */}
+        {!isNavMode && !isRoutePreview && !isMapExpanded && (
+          <div className="shrink-0 bg-white px-4 pt-10 pb-3 shadow-sm z-20 relative">
+            <HeaderBar campus={campus} onCampusOpen={() => setCampusOpen(true)} remaining={remaining} lowBalance={lowBalance} hideBalance={hideBalance} onOpenWallet={onOpenWallet} onOpenProfile={onOpenProfile} />
+            {globalPromo && <div className="mt-3"><PromoBanner text={globalPromo} /></div>}
+            <div className="mt-3">
+              <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+            </div>
+            <div className="mt-3">
+              <FilterChips filters={FILTERS} activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+            </div>
+          </div>
+        )}
+
+        {/* Map — grows to fill between header and list */}
+        <div className={`relative z-10 ${isNavMode || isMapExpanded ? 'flex-1' : 'h-[200px] shrink-0'}`}>
+          <MapView userPos={userPos} eateries={eateries} routeData={routeData} selected={selected} setSelected={setSelected} setRouteTarget={setRouteTarget} mapBounds={mapBounds} isExpanded={isMapExpanded || isNavMode} isNavMode={isNavMode} campusLoading={campusLoading} />
+          {/* Map expand/collapse button */}
+          {!isNavMode && (
+            <div className="absolute top-3 right-3 z-10">
+              <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsMapExpanded(!isMapExpanded)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 shadow-lg backdrop-blur text-gray-700 border border-white">
+                {isMapExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+              </motion.button>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom List — hidden during nav/expanded map */}
+        {!isNavMode && !isMapExpanded && !isRoutePreview && (
+          <div className="flex-1 min-h-0 bg-white rounded-t-3xl -mt-4 z-20 relative flex flex-col overflow-hidden shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+              <h3 className="text-lg tracking-tight text-gray-900" style={{fontWeight: 800}}>Terdekat dari Kamu</h3>
+              <button onClick={() => setShowAllSidebar(true)} className="text-xs text-[#FF6B1A] flex items-center gap-1 hover:underline" style={{fontWeight: 700}}>
+                Lihat Semua <ChevronRight size={14}/>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 pb-6 space-y-3 no-scrollbar">
+              <EateryList eateries={eateries} onSelect={(e) => { setSelected(e); setRouteTarget(null); }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ═══════════ OVERLAYS (shared mobile + desktop) ═══════════ */}
+
+      {/* Desktop expanded map overlay */}
+      <AnimatePresence>
+        {isMapExpanded && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hidden md:block fixed inset-8 z-50 rounded-[2.5rem] overflow-hidden shadow-2xl border-[6px] border-white">
+            <MapView userPos={userPos} eateries={eateries} routeData={routeData} selected={selected} setSelected={setSelected} setRouteTarget={setRouteTarget} mapBounds={mapBounds} isExpanded={true} isNavMode={isNavMode} campusLoading={campusLoading} />
+            <div className="absolute top-4 right-4 z-10">
+              <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsMapExpanded(false)} className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/90 shadow-lg backdrop-blur text-gray-700 border border-white hover:bg-white transition-colors">
+                <Minimize2 size={20} />
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Show All Sidebar */}
       <AnimatePresence>
         {showAllSidebar && (
           <>
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" 
-              onClick={() => setShowAllSidebar(false)} 
-            />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={() => setShowAllSidebar(false)} />
             <motion.div
               initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed top-0 left-0 bottom-0 z-50 w-full sm:w-[420px] bg-white shadow-[20px_0_50px_rgba(0,0,0,0.1)] flex flex-col"
             >
-              <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-br from-gray-50 to-white">
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-br from-gray-50 to-white shrink-0">
                 <div>
                   <h2 className="text-2xl text-gray-900 tracking-tight" style={{fontWeight: 800}}>Semua Tempat</h2>
                   <p className="text-sm text-gray-500 mt-1 font-medium">{eateries.length} tempat di sekitarmu</p>
@@ -461,6 +371,7 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
         )}
       </AnimatePresence>
 
+      {/* Eatery Detail Sheet */}
       <AnimatePresence>
         {selected && (
           <EateryDetail
@@ -471,6 +382,7 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
         )}
       </AnimatePresence>
 
+      {/* Route Preview Card */}
       <AnimatePresence>
         {routeTarget && (
           <RouteInfoCard 
@@ -485,6 +397,7 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
         )}
       </AnimatePresence>
 
+      {/* Navigator Overlay — FIXED fullscreen for both mobile & desktop */}
       <AnimatePresence>
         {navTarget && (
           <Navigator
@@ -495,13 +408,14 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
         )}
       </AnimatePresence>
 
+      {/* Campus Picker Sheet */}
       <AnimatePresence>
         {campusOpen && (
           <>
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={() => setCampusOpen(false)} />
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={() => setCampusOpen(false)} />
             <motion.div
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={spring}
-              className="absolute bottom-0 left-0 right-0 z-[70] rounded-t-3xl bg-white p-6 shadow-2xl md:max-w-md md:mx-auto md:bottom-1/2 md:translate-y-1/2 md:rounded-3xl"
+              className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-3xl bg-white p-6 shadow-2xl md:max-w-md md:mx-auto md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:rounded-3xl"
             >
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -535,6 +449,185 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
   );
 }
 
+/* ══════════════════════════════════════════════════════════════
+   REUSABLE SUB-COMPONENTS
+   ══════════════════════════════════════════════════════════════ */
+
+function HeaderBar({ campus, onCampusOpen, remaining, lowBalance, hideBalance, onOpenWallet, onOpenProfile }: any) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
+        <NakamLogo size={32} />
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={onCampusOpen}
+          className="flex items-center gap-1.5 rounded-full bg-gray-100/80 px-3 py-2 shadow-sm border border-gray-200 hover:bg-gray-200/50 transition-colors"
+        >
+          <span className="text-sm">📍</span>
+          <span className="text-xs text-gray-800" style={{ fontWeight: 800 }}>{campus}</span>
+          <ChevronDown size={14} className="text-gray-500" />
+        </motion.button>
+      </div>
+      <div className="flex items-center gap-2">
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={onOpenWallet}
+          className={`flex items-center gap-1.5 rounded-full px-3 py-2 shadow-sm border border-gray-200 transition-colors ${lowBalance ? "bg-red-50 hover:bg-red-100" : "bg-gray-100/80 hover:bg-gray-200/50"}`}
+        >
+          <Wallet size={14} className={lowBalance ? "text-red-500" : "text-[#FF6B1A]"} />
+          <span className="text-xs" style={{fontWeight:800, color: lowBalance ? "#ef4444" : "#1f2937"}}>
+            {hideBalance ? "••••" : "Rp " + (remaining / 1000).toFixed(0) + "k"}
+          </span>
+        </motion.button>
+        <motion.button whileTap={{ scale: 0.9 }} onClick={onOpenProfile} className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100/80 shadow-sm border border-gray-200 text-gray-700 hover:bg-gray-200/50 transition-colors">
+          <User size={16} />
+        </motion.button>
+      </div>
+    </div>
+  );
+}
+
+function PromoBanner({ text }: { text: string }) {
+  return (
+    <motion.div initial={{opacity:0, y:-10}} animate={{opacity:1, y:0}} className="bg-gradient-to-r from-orange-100 to-red-100 border border-orange-200 rounded-xl p-3 flex gap-3 items-center shadow-sm">
+      <div className="bg-[#FF6B1A] text-white rounded-full p-1.5 shrink-0"><Megaphone size={14}/></div>
+      <p className="text-xs text-orange-900 font-bold flex-1">{text}</p>
+    </motion.div>
+  );
+}
+
+function SearchBar({ searchQuery, setSearchQuery }: { searchQuery: string; setSearchQuery: (v: string) => void }) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-inner">
+      <Search size={18} className="text-gray-400" />
+      <input 
+        placeholder="Cari warkop, ayam geprek..." 
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-gray-400 text-gray-800" 
+      />
+      {searchQuery && (
+        <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-gray-600">
+          <X size={16} />
+        </button>
+      )}
+      <div className="h-4 w-px bg-gray-200" />
+      <MapPin size={18} className="text-[#FF6B1A]" />
+    </div>
+  );
+}
+
+function FilterChips({ filters, activeFilter, setActiveFilter }: { filters: string[]; activeFilter: string | null; setActiveFilter: (f: string | null) => void }) {
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+      {filters.map((f) => {
+        const isActive = activeFilter === f;
+        return (
+          <motion.button
+            key={f} whileTap={{ scale: 0.95 }} onClick={() => setActiveFilter(isActive ? null : f)}
+            className={`whitespace-nowrap rounded-full px-4 py-2 text-xs shadow-sm transition-colors ${
+              isActive ? "bg-[#FF6B1A] text-white border border-[#FF6B1A]" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+            }`}
+            style={{fontWeight: isActive ? 800 : 600}}
+          >
+            {f}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
+function EateryList({ eateries, onSelect }: { eateries: any[]; onSelect: (e: any) => void }) {
+  if (eateries.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 opacity-50">
+        <Dice5 size={48} className="mb-2 text-gray-400" />
+        <p className="text-sm font-medium">Tidak ada hasil ditemukan.</p>
+      </div>
+    );
+  }
+  return (
+    <>
+      {eateries.slice(0, 6).map((e) => (
+        <motion.div 
+          key={e.id}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => onSelect(e)}
+          className="flex gap-3 p-2 rounded-2xl bg-white border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow active:bg-gray-50"
+        >
+          <img src={e.image} alt={e.name} className="w-20 h-20 rounded-xl object-cover shrink-0" />
+          <div className="flex-1 py-1 min-w-0">
+            <h4 className="text-sm text-gray-900 leading-tight mb-1 truncate" style={{fontWeight: 800}}>{e.name}</h4>
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-1.5" style={{fontWeight: 600}}>
+              <span className="flex items-center gap-0.5 text-[#FF8C42]"><Star size={12} fill="currentColor" /> {e.dominance || 80}%</span>
+              <span>•</span>
+              <span className="flex items-center gap-1"><Footprints size={12}/> {e.walk}</span>
+            </div>
+            <div className="text-xs text-gray-800 bg-gray-100 inline-block px-2 py-0.5 rounded-lg font-medium">{e.price}</div>
+          </div>
+        </motion.div>
+      ))}
+    </>
+  );
+}
+
+function MapView({ userPos, eateries, routeData, selected, setSelected, setRouteTarget, mapBounds, isExpanded, isNavMode, campusLoading }: any) {
+  return (
+    <div className="w-full h-full relative">
+      <MapContainer center={[userPos.lat, userPos.lng]} zoom={15} zoomControl={false} className="h-full w-full" style={{ background: '#E8EEF4' }}>
+        <TileLayer 
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" 
+          attribution="&copy; OpenStreetMap &copy; CARTO"
+        />
+        <Marker position={[userPos.lat, userPos.lng]} icon={userIcon} />
+        {eateries.map((e: any) => (
+          <Marker 
+            key={e.id} 
+            position={[e.lat, e.lng]} 
+            icon={e.isOsm ? createOsmMarkerIcon() : createMarkerIcon(e.isMine, e.emoji)}
+            eventHandlers={{ click: () => { setSelected(e); setRouteTarget(null); } }}
+          />
+        ))}
+        {routeData && (
+          <Polyline 
+            positions={routeData.path} 
+            color="#3B82F6" 
+            weight={5} 
+            opacity={0.8}
+            lineCap="round"
+            lineJoin="round"
+          />
+        )}
+        <MapUpdater 
+          center={selected ? [selected.lat, selected.lng] : (!mapBounds ? [userPos.lat, userPos.lng] : undefined)} 
+          bounds={mapBounds} 
+          zoom={isExpanded || isNavMode ? 16 : 15}
+        />
+      </MapContainer>
+
+      {/* Campus loading overlay */}
+      <AnimatePresence>
+        {campusLoading && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[60] flex items-center justify-center bg-white/70 backdrop-blur-md"
+          >
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#FF6B1A] border-t-transparent shadow-lg" />
+              <div className="text-sm text-gray-700" style={{fontWeight:800}}>Memuat Area...</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ROUTE INFO CARD
+   ══════════════════════════════════════════════════════════════ */
+
 function RouteInfoCard({ target, mode, setMode, routeData, fetching, onClose, onStart }: any) {
   const modes = [
     { k: "walk" as const, l: "Jalan", i: <Footprints size={14} /> },
@@ -548,19 +641,19 @@ function RouteInfoCard({ target, mode, setMode, routeData, fetching, onClose, on
   return (
     <motion.div
       initial={{ y: "100%", opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: "100%", opacity: 0 }} transition={spring}
-      className="absolute bottom-0 left-0 right-0 z-30 rounded-t-3xl border-t border-gray-200 bg-white p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:max-w-md md:left-auto md:right-8 md:bottom-8 md:rounded-3xl"
+      className="fixed bottom-0 left-0 right-0 z-30 rounded-t-3xl border-t border-gray-200 bg-white p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:max-w-md md:left-auto md:right-8 md:bottom-8 md:rounded-3xl"
     >
       <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-gray-300 md:hidden" />
       
       <div className="flex items-start gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#FF6B1A] text-white shadow-lg">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#FF6B1A] text-white shadow-lg shrink-0">
           <Navigation size={24} />
         </div>
-        <div className="flex-1 pt-1">
+        <div className="flex-1 pt-1 min-w-0">
           <div className="text-[10px] uppercase tracking-widest text-blue-600" style={{fontWeight:800}}>Rute Pilihan</div>
-          <div className="text-xl tracking-tight text-gray-900" style={{fontWeight:800}}>{target.name}</div>
+          <div className="text-xl tracking-tight text-gray-900 truncate" style={{fontWeight:800}}>{target.name}</div>
         </div>
-        <button onClick={onClose} className="rounded-full bg-gray-100 p-2 text-gray-500 hover:bg-gray-200"><X size={16} /></button>
+        <button onClick={onClose} className="rounded-full bg-gray-100 p-2 text-gray-500 hover:bg-gray-200 shrink-0"><X size={16} /></button>
       </div>
 
       <div className="mt-5 flex gap-2 rounded-2xl bg-gray-100 p-1.5 shadow-inner">

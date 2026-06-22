@@ -53,20 +53,21 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={spring}
-      className="absolute inset-0 z-[60] flex flex-col pointer-events-none text-white"
+      className="fixed inset-0 z-[60] flex flex-col pointer-events-none text-white"
     >
-      <div className="relative flex-1 overflow-hidden pointer-events-none">
+      {/* Top section — overlays the map */}
+      <div className="relative flex-1 pointer-events-none">
 
         {/* Top bar */}
-        <div className="absolute left-0 right-0 top-0 z-10 flex items-center gap-2 px-4 pt-12 pointer-events-auto">
-          <motion.button whileTap={{scale:0.9}} onClick={onCancel} className="rounded-full bg-black/50 p-2 backdrop-blur-xl border border-white/20 text-white">
+        <div className="absolute left-0 right-0 top-0 z-10 flex items-center gap-2 px-4 pt-10 md:pt-12 pointer-events-auto">
+          <motion.button whileTap={{scale:0.9}} onClick={onCancel} className="rounded-full bg-black/50 p-2.5 backdrop-blur-xl border border-white/20 text-white shadow-lg">
             <ArrowLeft size={16} />
           </motion.button>
-          <div className="flex-1 rounded-2xl border border-white/20 bg-black/50 px-3 py-2 backdrop-blur-xl text-white shadow-lg">
-            <div className="text-[10px] text-white/70">Menuju</div>
+          <div className="flex-1 rounded-2xl border border-white/20 bg-black/50 px-4 py-2.5 backdrop-blur-xl text-white shadow-lg">
+            <div className="text-[10px] text-white/70 font-medium">Menuju</div>
             <div className="truncate text-sm" style={{fontWeight:700}}>{target.name}</div>
           </div>
-          <button className="rounded-full bg-black/50 p-2 backdrop-blur-xl border border-white/20 text-white shadow-lg"><Volume2 size={16} /></button>
+          <button className="rounded-full bg-black/50 p-2.5 backdrop-blur-xl border border-white/20 text-white shadow-lg pointer-events-auto"><Volume2 size={16} /></button>
         </div>
 
         {/* Big turn instruction */}
@@ -75,15 +76,15 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
             <motion.div
               key={step}
               initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -20, opacity: 0 }} transition={spring}
-              className="absolute left-3 right-3 top-28 z-10 flex items-center gap-3 rounded-3xl border border-white/15 bg-[#0a0e27]/85 p-4 shadow-2xl backdrop-blur-xl"
+              className="absolute left-3 right-3 top-24 md:top-28 z-10 flex items-center gap-3 rounded-3xl border border-white/15 bg-[#0a0e27]/85 p-4 shadow-2xl backdrop-blur-xl pointer-events-auto"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#FF6B1A]">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#FF6B1A] shrink-0">
                 <StepIcon size={28} />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="text-xs text-white/60">{steps[step]?.meters} m</div>
-                <div className="text-lg leading-tight tracking-tight" style={{fontWeight:800}}>{steps[step]?.dir}</div>
-                <div className="text-[11px] text-white/50">di {steps[step]?.street}</div>
+                <div className="text-lg leading-tight tracking-tight truncate" style={{fontWeight:800}}>{steps[step]?.dir}</div>
+                <div className="text-[11px] text-white/50 truncate">di {steps[step]?.street}</div>
               </div>
             </motion.div>
           )}
@@ -105,8 +106,9 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
       {/* Bottom info panel */}
       <motion.div 
         initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={spring}
-        className="relative z-10 border-t border-white/10 bg-[#0a0e27]/95 p-4 backdrop-blur-xl pointer-events-auto shadow-[0_-10px_40px_rgba(0,0,0,0.2)] md:max-w-md md:rounded-t-3xl md:mx-auto md:border-x"
+        className="relative z-10 border-t border-white/10 bg-[#0a0e27]/95 px-4 pt-4 pb-6 backdrop-blur-xl pointer-events-auto shadow-[0_-10px_40px_rgba(0,0,0,0.2)] md:max-w-md md:rounded-t-3xl md:mx-auto md:border-x"
       >
+        {/* Mode switcher */}
         <div className="flex gap-1 rounded-2xl bg-white/5 p-1">
           {([
             { k: "walk", l: "Jalan", i: <Footprints size={13} /> },
@@ -115,7 +117,7 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
           ] as { k: Mode; l: string; i: any }[]).map((m) => {
             const active = mode === m.k;
             return (
-              <button key={m.k} onClick={() => setMode(m.k)} className={`relative flex-1 rounded-xl py-2 text-xs ${active ? "text-[#0a0e27]" : "text-white/70"}`} style={{fontWeight:700}}>
+              <button key={m.k} onClick={() => setMode(m.k)} className={`relative flex-1 rounded-xl py-2.5 text-xs ${active ? "text-[#0a0e27]" : "text-white/70"}`} style={{fontWeight:700}}>
                 {active && <motion.div layoutId="navmode" transition={spring} className="absolute inset-0 rounded-xl bg-white" />}
                 <span className="relative flex items-center justify-center gap-1.5">{m.i}{m.l}</span>
               </button>
@@ -123,12 +125,14 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
           })}
         </div>
 
+        {/* Stats */}
         <div className="mt-3 grid grid-cols-3 gap-2">
           <Stat label="ETA" value={`${etaMin} mnt`} icon={<Clock size={12} />} />
           <Stat label="Sisa" value={`${remainingKm} km`} icon={<MapPin size={12} />} />
           <Stat label="Tiba" value={formatArrive(etaMin)} icon={<Navigation size={12} />} />
         </div>
 
+        {/* Progress bar */}
         <div className="mt-3">
           <div className="mb-1 flex items-center justify-between text-[10px] text-white/50">
             <span>Progres perjalanan</span>
@@ -143,8 +147,9 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
           </div>
         </div>
 
+        {/* Cancel button */}
         <motion.button whileTap={{scale:0.97}} onClick={onCancel}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-500/90 py-3 text-sm" style={{fontWeight:700}}>
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-500/90 py-3.5 text-sm" style={{fontWeight:700}}>
           <X size={14} /> Akhiri Navigasi
         </motion.button>
       </motion.div>

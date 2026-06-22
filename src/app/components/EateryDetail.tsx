@@ -44,7 +44,7 @@ export function EateryDetail({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 z-30 bg-black/40 backdrop-blur-sm"
+        className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm"
       />
       <motion.div
         initial={{ y: "100%" }}
@@ -58,7 +58,7 @@ export function EateryDetail({
           if (info.offset.y < -80) setExpanded(true);
           else if (info.offset.y > 100) onClose();
         }}
-        className={`absolute left-0 right-0 z-40 overflow-hidden bg-white shadow-2xl ${expanded ? "top-0 bottom-0 rounded-none" : "bottom-0 max-h-[90%] rounded-t-[28px]"}`}
+        className={`fixed left-0 right-0 z-40 overflow-hidden bg-white shadow-2xl ${expanded ? "top-0 bottom-0 rounded-none" : "bottom-0 max-h-[90dvh] rounded-t-[28px]"}`}
       >
         {!expanded && (
           <div className="flex justify-center pt-3">
@@ -66,7 +66,7 @@ export function EateryDetail({
           </div>
         )}
 
-        <div className="overflow-y-auto" style={{ maxHeight: expanded ? "100vh" : "85vh" }}>
+        <div className="overflow-y-auto" style={{ maxHeight: expanded ? "100dvh" : "85dvh" }}>
           {/* Hero */}
           <div className="relative w-full">
             <div onClick={() => setOverlay("gallery")} className="cursor-pointer">
@@ -227,7 +227,7 @@ export function EateryDetail({
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 flex items-center justify-center bg-black/60"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
           >
             <motion.div
               initial={{ y: 30 }}
@@ -263,7 +263,7 @@ function Gallery({ photos, onClose }: { photos: string[]; onClose: () => void })
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 flex flex-col bg-black"
+      className="fixed inset-0 z-50 flex flex-col bg-black"
     >
       <div className="flex items-center justify-between px-4 pb-3 pt-12 text-white">
         <button onClick={onClose}><X size={22} /></button>
@@ -296,7 +296,7 @@ function CheckInModal({ place, onCancel, onConfirm }: any) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 flex items-end justify-center bg-black/60"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60"
     >
       <motion.div
         initial={{ y: 200 }}
@@ -330,7 +330,7 @@ function AddExpenseModal({ place, amount, setAmount, onCancel, onConfirm }: any)
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 flex items-end justify-center bg-black/60"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60"
     >
       <motion.div
         initial={{ y: 400 }}
