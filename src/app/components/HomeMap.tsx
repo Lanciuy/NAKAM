@@ -176,6 +176,8 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
   let mapBounds: L.LatLngBoundsExpression | undefined = undefined;
   if (routeData && routeData.path.length > 0) {
     mapBounds = L.latLngBounds(routeData.path);
+  }
+
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden bg-[#E8EEF4] p-4 sm:p-6 md:p-8 flex flex-col md:grid md:grid-cols-[420px_1fr] md:grid-rows-[auto_minmax(0,1fr)] gap-4 md:gap-6">
       
