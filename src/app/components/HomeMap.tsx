@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, User, MapPin, Dice5, Wallet, Eye, EyeOff, ChevronDown, Check, X,
-  Navigation, Footprints, Bike, Car, Clock, Loader2
+  Navigation, Footprints, Bike, Car, Clock, Loader2, Maximize2, Minimize2, Star, ChevronRight
 } from "lucide-react";
 import { EateryDetail } from "./EateryDetail";
 import { Navigator } from "./Navigator";
@@ -59,11 +59,15 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
   const [campusOpen, setCampusOpen] = useState(false);
   const [campusLoading, setCampusLoading] = useState(false);
   
-  const [navTarget, setNavTarget] = useState<any>(null); // Full navigator
-  const [routeTarget, setRouteTarget] = useState<any>(null); // Route info bottom sheet
+  const [navTarget, setNavTarget] = useState<any>(null);
+  const [routeTarget, setRouteTarget] = useState<any>(null);
   const [routeMode, setRouteMode] = useState<"walk" | "bike" | "car">("bike");
   const [routeData, setRouteData] = useState<{ path: [number, number][], dist: number, dur: number } | null>(null);
   const [fetchingRoute, setFetchingRoute] = useState(false);
+
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
+  const [showAllSidebar, setShowAllSidebar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [userPos, setUserPos] = useState({ lat: -7.9213, lng: 112.5990 }); // Default UMM
   const { campus, setCampus, hideBalance, toggleHideBalance, budget, spent, merchant } = useStore();
@@ -100,8 +104,6 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
     const fetchRoute = async () => {
       setFetchingRoute(true);
       try {
-        // OSRM public demo server reliably supports 'driving'.
-        // We use driving to get the geometry and distance, then calculate duration locally.
         const url = `https://router.project-osrm.org/route/v1/driving/${userPos.lng},${userPos.lat};${target.lng},${target.lat}?overview=full&geometries=geojson`;
         const res = await fetch(url);
         const data = await res.json();
@@ -144,10 +146,17 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
     rating: "Baru"
   } : null;
 
-  const eateries = [
+  let eateries = [
     ...(merchantEatery ? [merchantEatery] : []),
     ...(supabaseEateries || EATERIES_BY_CAMPUS[campus] || [])
   ];
+
+  if (activeFilter) {
+    eateries = eateries.filter(e => e.filter?.includes(activeFilter));
+  }
+  if (searchQuery) {
+    eateries = eateries.filter(e => e.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }
 
   const switchCampus = (c: string) => {
     setCampusOpen(false);
@@ -164,18 +173,134 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
   const remaining = budget - spent;
   const lowBalance = remaining / budget < 0.15;
 
-  // UI State: if user is viewing detail or navigating, we hide the top floating stuff like Gojek
-  const hideTopHeader = !!selected || !!routeTarget || !!navTarget || campusOpen;
-
   let mapBounds: L.LatLngBoundsExpression | undefined = undefined;
   if (routeData && routeData.path.length > 0) {
     mapBounds = L.latLngBounds(routeData.path);
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#E8EEF4]">
-      {/* Map Layer */}
-      <div className="absolute inset-0 z-0">
+    <div className="relative flex h-[100dvh] w-full flex-col md:flex-row overflow-hidden bg-[#E8EEF4] p-4 sm:p-6 md:p-8 gap-6">
+      
+      {/* Left Panel: Header, Search, Nearby List */}
+      <div className={`flex flex-col w-full md:w-[420px] h-full gap-4 z-10 shrink-0 transition-opacity duration-300 ${isMapExpanded ? 'opacity-0 pointer-events-none md:hidden' : 'opacity-100'}`}>
+        
+        {/* Header Card */}
+        <div className="bg-white/90 rounded-[2rem] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-white/50 flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <NakamLogo size={32} />
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCampusOpen(true)}
+                className="flex items-center gap-1.5 rounded-full bg-gray-100/80 px-3 py-2 shadow-sm border border-gray-200 hover:bg-gray-200/50 transition-colors"
+              >
+                <span className="text-sm">📍</span>
+                <span className="text-xs text-gray-800" style={{ fontWeight: 800 }}>{campus}</span>
+                <ChevronDown size={14} className="text-gray-500" />
+              </motion.button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={onOpenWallet}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-2 shadow-sm border border-gray-200 transition-colors ${lowBalance ? "bg-red-50 hover:bg-red-100" : "bg-gray-100/80 hover:bg-gray-200/50"}`}
+              >
+                <Wallet size={14} className={lowBalance ? "text-red-500" : "text-[#FF6B1A]"} />
+                <span className="text-xs" style={{fontWeight:800, color: lowBalance ? "#ef4444" : "#1f2937"}}>
+                  {hideBalance ? "••••" : "Rp " + (remaining / 1000).toFixed(0) + "k"}
+                </span>
+              </motion.button>
+              <motion.button whileTap={{ scale: 0.9 }} onClick={onOpenProfile} className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100/80 shadow-sm border border-gray-200 text-gray-700 hover:bg-gray-200/50 transition-colors">
+                <User size={16} />
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="flex items-center gap-2.5 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-inner">
+            <Search size={18} className="text-gray-400" />
+            <input 
+              placeholder="Cari warkop, ayam geprek..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-gray-400 text-gray-800" 
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-gray-600">
+                <X size={16} />
+              </button>
+            )}
+            <div className="h-4 w-px bg-gray-200" />
+            <MapPin size={18} className="text-[#FF6B1A]" />
+          </div>
+
+          {/* Filter Chips */}
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {FILTERS.map((f) => {
+              const isActive = activeFilter === f;
+              return (
+                <motion.button
+                  key={f} whileTap={{ scale: 0.95 }} onClick={() => setActiveFilter(isActive ? null : f)}
+                  className={`whitespace-nowrap rounded-full px-4 py-2 text-xs shadow-sm transition-colors ${
+                    isActive ? "bg-[#FF6B1A] text-white border border-[#FF6B1A]" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                  }`}
+                  style={{fontWeight: isActive ? 800 : 600}}
+                >
+                  {f}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Nearby Eateries List Card */}
+        <div className="flex-1 bg-white/90 rounded-[2rem] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-white/50 flex flex-col overflow-hidden relative">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg tracking-tight text-gray-900" style={{fontWeight: 800}}>Terdekat dari Kamu</h3>
+            <button onClick={() => setShowAllSidebar(true)} className="text-xs text-[#FF6B1A] flex items-center gap-1 hover:underline" style={{fontWeight: 700}}>
+              Lihat Semua <ChevronRight size={14}/>
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto space-y-3 pr-2 no-scrollbar">
+            {eateries.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full opacity-50">
+                <Dice5 size={48} className="mb-2 text-gray-400" />
+                <p className="text-sm font-medium">Tidak ada hasil ditemukan.</p>
+              </div>
+            ) : (
+              eateries.slice(0, 4).map((e) => (
+                <motion.div 
+                  key={e.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setSelected(e); setRouteTarget(null); }}
+                  className="flex gap-3 p-2 rounded-2xl bg-white border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                >
+                  <img src={e.image} alt={e.name} className="w-20 h-20 rounded-xl object-cover" />
+                  <div className="flex-1 py-1">
+                    <h4 className="text-sm text-gray-900 leading-tight mb-1" style={{fontWeight: 800}}>{e.name}</h4>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-1.5" style={{fontWeight: 600}}>
+                      <span className="flex items-center gap-0.5 text-[#FF8C42]"><Star size={12} fill="currentColor" /> {e.dominance || 80}%</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1"><Footprints size={12}/> {e.walk}</span>
+                    </div>
+                    <div className="text-xs text-gray-800 bg-gray-100 inline-block px-2 py-0.5 rounded-lg font-medium">{e.price}</div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive Map Card */}
+      <motion.div 
+        layout
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={`relative flex-1 bg-gray-200 rounded-[2.5rem] overflow-hidden shadow-2xl border-[6px] border-white z-0 ${isMapExpanded ? 'absolute inset-4 sm:inset-6 md:inset-8 z-30' : ''}`}
+      >
         <MapContainer center={[userPos.lat, userPos.lng]} zoom={15} zoomControl={false} className="h-full w-full" style={{ background: '#E8EEF4' }}>
           <TileLayer 
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" 
@@ -207,6 +332,7 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
           <MapUpdater 
             center={selected ? [selected.lat, selected.lng] : (!mapBounds ? [userPos.lat, userPos.lng] : undefined)} 
             bounds={mapBounds} 
+            zoom={isMapExpanded ? 16 : 15}
           />
         </MapContainer>
 
@@ -224,74 +350,69 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      {/* Dynamic Top Header (Gojek Style) */}
-      <AnimatePresence>
-        {!hideTopHeader && (
-          <motion.div 
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-            transition={{ ...spring, damping: 25 }}
-            className="absolute left-0 right-0 top-0 z-20 px-4 pt-12 pb-4 pointer-events-none"
+        {/* Map Controls */}
+        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsMapExpanded(!isMapExpanded)}
+            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/90 shadow-lg backdrop-blur text-gray-700 border border-white hover:bg-white transition-colors"
           >
-            <div className="pointer-events-auto flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <NakamLogo size={32} />
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setCampusOpen(true)}
-                  className="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-2 shadow-lg backdrop-blur-xl border border-gray-100"
-                >
-                  <span className="text-sm">📍</span>
-                  <span className="text-xs text-gray-800" style={{ fontWeight: 800 }}>{campus}</span>
-                  <ChevronDown size={14} className="text-gray-500" />
-                </motion.button>
+            {isMapExpanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* Floating Sidebar for "Show All" */}
+      <AnimatePresence>
+        {showAllSidebar && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" 
+              onClick={() => setShowAllSidebar(false)} 
+            />
+            <motion.div
+              initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed top-0 left-0 bottom-0 z-50 w-full sm:w-[420px] bg-white shadow-[20px_0_50px_rgba(0,0,0,0.1)] flex flex-col"
+            >
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-br from-gray-50 to-white">
+                <div>
+                  <h2 className="text-2xl text-gray-900 tracking-tight" style={{fontWeight: 800}}>Semua Tempat</h2>
+                  <p className="text-sm text-gray-500 mt-1 font-medium">{eateries.length} tempat di sekitarmu</p>
+                </div>
+                <button onClick={() => setShowAllSidebar(false)} className="rounded-full bg-gray-100 p-2 hover:bg-gray-200 transition-colors">
+                  <X size={20} className="text-gray-600" />
+                </button>
               </div>
-
-              <div className="flex items-center gap-2">
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={onOpenWallet}
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-2 shadow-lg backdrop-blur-xl border border-gray-100 ${lowBalance ? "bg-red-50" : "bg-white/95"}`}
-                >
-                  <Wallet size={14} className={lowBalance ? "text-red-500" : "text-[#FF6B1A]"} />
-                  <span className="text-xs" style={{fontWeight:800, color: lowBalance ? "#ef4444" : "#1f2937"}}>
-                    {hideBalance ? "••••" : "Rp " + (remaining / 1000).toFixed(0) + "k"}
-                  </span>
-                </motion.button>
-                <motion.button whileTap={{ scale: 0.9 }} onClick={onOpenProfile} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-lg backdrop-blur-xl border border-gray-100 text-gray-700">
-                  <User size={16} />
-                </motion.button>
-              </div>
-            </div>
-
-            {/* Search */}
-            <div className="pointer-events-auto mt-4 flex items-center gap-2.5 rounded-2xl border border-gray-200 bg-white/95 px-4 py-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl">
-              <Search size={18} className="text-gray-400" />
-              <input placeholder="Cari warkop, ayam geprek..." className="flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-gray-400 text-gray-800" />
-              <div className="h-4 w-px bg-gray-200" />
-              <MapPin size={18} className="text-[#FF6B1A]" />
-            </div>
-
-            {/* Filter Chips */}
-            <div className="pointer-events-auto mt-3 flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-              {FILTERS.map((f) => {
-                const isActive = activeFilter === f;
-                return (
-                  <motion.button
-                    key={f} whileTap={{ scale: 0.95 }} onClick={() => setActiveFilter(isActive ? null : f)}
-                    className={`whitespace-nowrap rounded-full px-4 py-2 text-xs shadow-sm transition-colors ${
-                      isActive ? "bg-[#FF6B1A] text-white font-bold border-[#FF6B1A]" : "bg-white/95 text-gray-600 border border-gray-200"
-                    }`}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-gray-50/50 no-scrollbar">
+                {eateries.map((e) => (
+                  <motion.div 
+                    key={e.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => { setSelected(e); setRouteTarget(null); setShowAllSidebar(false); }}
+                    className="flex gap-4 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                   >
-                    {f}
-                  </motion.button>
-                );
-              })}
-            </div>
-          </motion.div>
+                    <img src={e.image} alt={e.name} className="w-24 h-24 rounded-xl object-cover" />
+                    <div className="flex-1 py-1">
+                      <h4 className="text-base text-gray-900 leading-tight mb-1" style={{fontWeight: 800}}>{e.name}</h4>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-2" style={{fontWeight: 600}}>
+                        <span className="flex items-center gap-0.5 text-[#FF8C42]"><Star size={14} fill="currentColor" /> {e.dominance || 80}%</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1"><Footprints size={14}/> {e.walk}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {e.filter?.map((f: string) => <span key={f} className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-md text-gray-600 font-medium">{f.replace(/[^a-zA-Z\s]/g, '').trim()}</span>)}
+                      </div>
+                      <div className="text-xs text-gray-800 bg-gray-100 inline-block px-2 py-1 rounded-lg font-bold">{e.price}</div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -332,10 +453,10 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
       <AnimatePresence>
         {campusOpen && (
           <>
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={() => setCampusOpen(false)} />
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={() => setCampusOpen(false)} />
             <motion.div
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={spring}
-              className="absolute bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-white p-6 shadow-2xl"
+              className="absolute bottom-0 left-0 right-0 z-[70] rounded-t-3xl bg-white p-6 shadow-2xl md:max-w-md md:mx-auto md:bottom-1/2 md:translate-y-1/2 md:rounded-3xl"
             >
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -382,9 +503,9 @@ function RouteInfoCard({ target, mode, setMode, routeData, fetching, onClose, on
   return (
     <motion.div
       initial={{ y: "100%", opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: "100%", opacity: 0 }} transition={spring}
-      className="absolute bottom-0 left-0 right-0 z-30 rounded-t-3xl border-t border-gray-200 bg-white p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]"
+      className="absolute bottom-0 left-0 right-0 z-30 rounded-t-3xl border-t border-gray-200 bg-white p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:max-w-md md:left-auto md:right-8 md:bottom-8 md:rounded-3xl"
     >
-      <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-gray-300" />
+      <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-gray-300 md:hidden" />
       
       <div className="flex items-start gap-4">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#FF6B1A] text-white shadow-lg">
