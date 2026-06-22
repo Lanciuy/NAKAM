@@ -156,9 +156,12 @@ export async function fetchProfile(userId: string): Promise<ProfileRow | null> {
 export async function upsertProfile(profile: Partial<ProfileRow> & { id: string }): Promise<void> {
   if (!supabase) return;
   try {
-    await supabase.from("profiles").upsert(profile, { onConflict: "id" });
-  } catch {
-    // silently fail
+    const { error } = await supabase.from("profiles").upsert(profile, { onConflict: "id" });
+    if (error) {
+      console.error("[Nakam] upsertProfile error:", error.message, error.details);
+    }
+  } catch (err) {
+    console.error("[Nakam] upsertProfile exception:", err);
   }
 }
 

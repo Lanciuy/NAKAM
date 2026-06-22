@@ -191,7 +191,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // Load profile
     const profile = await fetchProfile(userId);
     if (profile) {
-      setUserState({ name: profile.name, bio: profile.bio, avatar: profile.avatar, banner: profile.banner, socials: profile.socials });
+      // Merge: Supabase data fills in, but doesn't overwrite locally-set fields like avatar/banner if they exist
+      setUserState(prev => ({
+        name: profile.name || prev.name,
+        bio: profile.bio || prev.bio,
+        avatar: profile.avatar || prev.avatar,
+        banner: profile.banner || prev.banner,
+        socials: profile.socials || prev.socials,
+      }));
       setCampusState(profile.campus || "UMM");
       setBudgetState(profile.budget || 1500000);
       if (profile.theme === "dark" || profile.theme === "light") {
@@ -297,6 +304,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // ─── User profile ───
   const setUser = (u: Store["user"]) => {
     setUserState(u);
+    // Immediately flush to localStorage so refresh always has latest
+    localStorage.setItem("userProfile", JSON.stringify(u));
     if (supabaseUser) {
       upsertProfile({ id: supabaseUser.id, name: u.name, bio: u.bio, avatar: u.avatar, banner: u.banner, socials: u.socials });
     }
