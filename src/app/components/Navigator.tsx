@@ -99,7 +99,7 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
             <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl">🎉</div>
             <div className="text-xl tracking-tight" style={{fontWeight:800}}>Sampai!</div>
             <div className="mt-1 text-xs text-gray-500">Selamat menikmati di {target.name}</div>
-            <button onClick={onClose} className="mt-4 rounded-full bg-gradient-to-r from-blue-500 to-[#FF6B1A] px-5 py-2 text-xs text-white" style={{fontWeight:700}}>Selesai</button>
+            <button onClick={onCancel} className="mt-4 rounded-full bg-gradient-to-r from-blue-500 to-[#FF6B1A] px-5 py-2 text-xs text-white" style={{fontWeight:700}}>Selesai</button>
           </motion.div>
         )}
       </div>
@@ -142,7 +142,7 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
           </div>
         </div>
 
-        <motion.button whileTap={{scale:0.97}} onClick={onClose}
+        <motion.button whileTap={{scale:0.97}} onClick={onCancel}
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-500/90 py-3 text-sm" style={{fontWeight:700}}>
           <X size={14} /> Akhiri Navigasi
         </motion.button>

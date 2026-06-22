@@ -78,25 +78,39 @@ export function Login({ onDone }: { onDone: () => void }) {
   };
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-[#0a0e27] via-[#1a1f4d] to-[#0a0e27] text-white">
-      <div className="pointer-events-none absolute inset-0 opacity-10">
-        <Utensils className="absolute top-16 left-8 h-32 w-32 -rotate-12" />
-        <MapPin className="absolute bottom-32 right-6 h-40 w-40 rotate-12" />
-      </div>
-      <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-[#FF6B1A] opacity-30 blur-3xl" />
-      <div className="absolute bottom-0 -right-20 h-80 w-80 rounded-full bg-[#3B82F6] opacity-30 blur-3xl" />
+    <div className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-gradient-to-br from-[#0a0e27] via-[#1a1f4d] to-[#0a0e27] p-4 text-white sm:p-8">
+      <motion.div 
+        animate={{ rotate: 360 }} 
+        transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
+        className="pointer-events-none absolute inset-0 opacity-10"
+      >
+        <Utensils className="absolute top-16 left-8 h-32 w-32" />
+        <MapPin className="absolute bottom-32 right-6 h-40 w-40" />
+      </motion.div>
+      <motion.div 
+        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-[#FF6B1A] blur-3xl" 
+      />
+      <motion.div 
+        animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.4, 0.3] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute bottom-0 -right-20 h-80 w-80 rounded-full bg-[#3B82F6] blur-3xl" 
+      />
 
       <AnimatePresence mode="wait">
         {(phase === "login" || phase === "register" || phase === "loading") ? (
           <motion.div
             key={phase === "register" ? "register" : "login"}
-            exit={{ opacity: 0, x: -50 }}
-            transition={spring}
-            className="relative z-10 flex h-full flex-col overflow-y-auto px-6 pt-12 pb-8"
+            initial={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(10px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -40, scale: 0.95, filter: "blur(10px)" }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="relative z-10 w-full max-w-md overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl sm:p-10"
           >
             <motion.div
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
+              initial={{ y: -20, opacity: 0, scale: 0.9 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
               transition={spring}
               className="mb-8 flex flex-col items-center text-center"
             >
@@ -109,7 +123,7 @@ export function Login({ onDone }: { onDone: () => void }) {
               </p>
             </motion.div>
 
-            <div className="flex flex-1 flex-col justify-center gap-4">
+            <div className="mt-4 flex flex-col gap-4">
               {/* Error message */}
               <AnimatePresence>
                 {error && (
@@ -213,11 +227,11 @@ export function Login({ onDone }: { onDone: () => void }) {
         ) : phase === "profile" ? (
           <motion.div
             key="profile"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={spring}
-            className="relative z-10 flex h-full w-full flex-col overflow-y-auto px-6 pt-14 pb-8"
+            initial={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(10px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -40, scale: 0.95, filter: "blur(10px)" }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="relative z-10 w-full max-w-md overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl sm:p-10"
           >
             <div className="mb-3 flex items-center gap-2 text-xs text-white/60">
               <span className="rounded-full bg-white/10 px-2 py-0.5">Step 1/2</span>
@@ -268,8 +282,6 @@ export function Login({ onDone }: { onDone: () => void }) {
               </div>
             </div>
 
-            <div className="flex-1 min-h-[40px]" />
-
             <motion.button
               whileTap={{ scale: 0.95 }}
               transition={spring}
@@ -278,7 +290,7 @@ export function Login({ onDone }: { onDone: () => void }) {
                 setCampus(profCampus);
                 setPhase("budget");
               }}
-              className="mt-6 w-full rounded-2xl bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] py-4 text-white shadow-lg shadow-[#FF6B1A]/40"
+              className="mt-8 w-full rounded-2xl bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] py-4 text-white shadow-lg shadow-[#FF6B1A]/40"
               style={{ fontWeight: 700 }}
             >
               Lanjut ke Budget →
@@ -287,10 +299,11 @@ export function Login({ onDone }: { onDone: () => void }) {
         ) : (
           <motion.div
             key="budget"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={spring}
-            className="relative z-10 flex h-full w-full flex-col overflow-y-auto px-6 pt-14 pb-8"
+            initial={{ opacity: 0, y: 40, scale: 0.95, filter: "blur(10px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -40, scale: 0.95, filter: "blur(10px)" }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="relative z-10 w-full max-w-md overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl sm:p-10"
           >
             <div className="mb-3 flex items-center gap-2 text-xs text-white/60">
               <span className="rounded-full bg-white/10 px-2 py-0.5">Step 2/2</span>
@@ -334,8 +347,6 @@ export function Login({ onDone }: { onDone: () => void }) {
               </div>
             </div>
 
-            <div className="flex-1" />
-
             <motion.button
               whileTap={{ scale: 0.95 }}
               transition={spring}
@@ -343,7 +354,7 @@ export function Login({ onDone }: { onDone: () => void }) {
                 setBudget(parseInt(target) || 0);
                 onDone();
               }}
-              className="w-full rounded-2xl bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] py-4 text-white shadow-lg shadow-[#FF6B1A]/40"
+              className="mt-8 w-full rounded-2xl bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] py-4 text-white shadow-lg shadow-[#FF6B1A]/40"
               style={{ fontWeight: 700 }}
             >
               Mulai Eksplorasi →
