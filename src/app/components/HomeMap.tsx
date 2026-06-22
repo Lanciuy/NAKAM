@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search, User, MapPin, Dice5, Wallet, Eye, EyeOff, ChevronDown, Check, X,
-  Navigation, Footprints, Bike, Car, Clock, Loader2, Maximize2, Minimize2, Star, ChevronRight
+  Navigation, Footprints, Bike, Car, Clock, Loader2, Maximize2, Minimize2, Star, ChevronRight, Megaphone
 } from "lucide-react";
 import { EateryDetail } from "./EateryDetail";
 import { Navigator } from "./Navigator";
@@ -70,7 +70,7 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
   const [searchQuery, setSearchQuery] = useState("");
 
   const [userPos, setUserPos] = useState({ lat: -7.9213, lng: 112.5990 }); // Default UMM
-  const { campus, setCampus, hideBalance, toggleHideBalance, budget, spent, merchant } = useStore();
+  const { campus, setCampus, hideBalance, budget, spent, merchant, globalPromo } = useStore();
   const [supabaseEateries, setSupabaseEateries] = useState<any[] | null>(null);
 
   useEffect(() => {
@@ -216,6 +216,14 @@ export function HomeMap({ onOpenProfile, onOpenWallet }: { onOpenProfile: () => 
               </motion.button>
             </div>
           </div>
+
+          {/* Promo Banner */}
+          {globalPromo && (
+            <motion.div initial={{opacity:0, y:-10}} animate={{opacity:1, y:0}} className="bg-gradient-to-r from-orange-100 to-red-100 border border-orange-200 rounded-xl p-3 flex gap-3 items-center shadow-sm">
+              <div className="bg-[#FF6B1A] text-white rounded-full p-1.5"><Megaphone size={14}/></div>
+              <p className="text-xs text-orange-900 font-bold flex-1">{globalPromo}</p>
+            </motion.div>
+          )}
 
           {/* Search */}
           <div className="flex items-center gap-2.5 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-inner">

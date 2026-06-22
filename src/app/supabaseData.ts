@@ -78,6 +78,52 @@ export async function fetchEateriesFromSupabase(
   }
 }
 
+export async function fetchAllEateriesForAdmin(): Promise<any[] | null> {
+  if (!supabase) return null;
+  try {
+    const { data: eateries, error } = await supabase
+      .from("eateries")
+      .select("*")
+      .order("campus", { ascending: true });
+
+    if (error || !eateries) return null;
+    return eateries;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteEateryByAdmin(id: string): Promise<void> {
+  if (!supabase || !id) return;
+  try {
+    await supabase.from("eateries").delete().eq("id", id);
+  } catch {}
+}
+
+export async function adminAddEatery(
+  data: { name: string; campus: string; emoji: string; price: string; lat: number; lng: number; image?: string; filters: string[] }
+): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { error } = await supabase.from("eateries").insert({
+      name: data.name,
+      campus: data.campus,
+      price_range: data.price,
+      lat: data.lat,
+      lng: data.lng,
+      image: data.image,
+      filters: data.filters,
+      tags: [],
+      gallery: data.image ? [data.image] : [],
+      dominance: 80,
+      walk_time: "5 mnt",
+    });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
 // ─── Profile ───
 
 export type ProfileRow = {

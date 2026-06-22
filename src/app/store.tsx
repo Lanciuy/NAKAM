@@ -63,6 +63,9 @@ type Store = {
   budget: number;
   setBudget: (n: number) => void;
   spent: number;
+  // Promo
+  globalPromo: string;
+  setGlobalPromo: (v: string) => void;
   addExpense: (t: Omit<Transaction, "id" | "date">) => void;
   transactions: Transaction[];
   hideBalance: boolean;
@@ -107,6 +110,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // ─── Budget & Wallet ───
   const [budget, setBudgetState] = useState(() => parseInt(localStorage.getItem("budget") || "0", 10));
+  const [globalPromo, setGlobalPromoState] = useState(() => localStorage.getItem("globalPromo") || "");
   const [hideBalance, setHide] = useState(() => localStorage.getItem("hideBalance") === "true");
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     const saved = localStorage.getItem("transactions");
@@ -148,11 +152,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem("theme", theme);
     localStorage.setItem("budget", budget.toString());
+    localStorage.setItem("globalPromo", globalPromo);
     localStorage.setItem("hideBalance", hideBalance.toString());
     localStorage.setItem("campus", campus);
     localStorage.setItem("transactions", JSON.stringify(transactions));
     localStorage.setItem("userProfile", JSON.stringify(user));
-  }, [theme, budget, hideBalance, campus, transactions, user]);
+  }, [theme, budget, globalPromo, hideBalance, campus, transactions, user]);
 
   // ─── Auth: Listen for session changes ───
   useEffect(() => {
@@ -284,6 +289,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ─── Promo ───
+  const setGlobalPromo = (v: string) => {
+    setGlobalPromoState(v);
+  };
+
   // ─── User profile ───
   const setUser = (u: Store["user"]) => {
     setUserState(u);
@@ -307,7 +317,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const addExpense = (t: Omit<Transaction, "id" | "date">) => {
     const newTx: Transaction = {
       ...t,
-      id: "t" + Date.now() + Math.random().toString(36).substring(2, 9),
+      id: Math.random().toString(),
       date: "Baru saja",
     };
     setTransactions((prev) => [newTx, ...prev]);
@@ -449,6 +459,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         budget,
         setBudget,
         spent,
+        globalPromo,
+        setGlobalPromo,
         addExpense,
         transactions,
         hideBalance,
