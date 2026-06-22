@@ -76,7 +76,7 @@ type Store = {
   showExpense: boolean;
   setShowExpense: (v: boolean) => void;
   // User profile
-  user: { name: string; bio: string; avatar: string };
+  user: { name: string; bio: string; avatar: string; banner?: string; socials?: { instagram?: string; twitter?: string } };
   setUser: (u: Store["user"]) => void;
   // Merchant
   merchant: Merchant;
@@ -125,6 +125,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       name: "Rangga Pratama",
       bio: "Mahasiswa · Pemburu warkop murah 🍜",
       avatar: "R",
+      banner: "",
+      socials: { instagram: "", twitter: "" }
     };
   });
 
@@ -184,7 +186,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // Load profile
     const profile = await fetchProfile(userId);
     if (profile) {
-      setUserState({ name: profile.name, bio: profile.bio, avatar: profile.avatar });
+      setUserState({ name: profile.name, bio: profile.bio, avatar: profile.avatar, banner: profile.banner, socials: profile.socials });
       setCampusState(profile.campus || "UMM");
       setBudgetState(profile.budget || 1500000);
       if (profile.theme === "dark" || profile.theme === "light") {
@@ -283,10 +285,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   // ─── User profile ───
-  const setUser = (u: { name: string; bio: string; avatar: string }) => {
+  const setUser = (u: Store["user"]) => {
     setUserState(u);
     if (supabaseUser) {
-      upsertProfile({ id: supabaseUser.id, name: u.name, bio: u.bio, avatar: u.avatar });
+      upsertProfile({ id: supabaseUser.id, name: u.name, bio: u.bio, avatar: u.avatar, banner: u.banner, socials: u.socials });
     }
   };
 

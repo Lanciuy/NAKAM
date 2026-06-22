@@ -88,6 +88,8 @@ export type ProfileRow = {
   campus: string;
   budget: number;
   theme: string;
+  banner?: string;
+  socials?: { instagram?: string; twitter?: string };
 };
 
 export async function fetchProfile(userId: string): Promise<ProfileRow | null> {
@@ -259,7 +261,7 @@ export async function deleteMerchant(merchantDbId: string): Promise<void> {
 }
 
 export async function adminAddMerchant(
-  data: { name: string; campus: string; emoji: string; price: string; lat: number; lng: number }
+  data: { name: string; campus: string; emoji: string; price: string; lat: number; lng: number; image?: string }
 ): Promise<boolean> {
   if (!supabase) return false;
   try {
@@ -270,6 +272,7 @@ export async function adminAddMerchant(
       price_range: data.price,
       lat: data.lat,
       lng: data.lng,
+      image: data.image,
       onboarded: true,
       status: "buka",
       // user_id is intentionally omitted for admin-created stores
@@ -383,5 +386,31 @@ function formatRelativeTime(isoDate: string): string {
     return `${days} hari lalu`;
   } catch {
     return "Baru saja";
+  }
+}
+
+// ─── Storage ───
+
+export async function uploadImageToSupabase(file: File): Promise<string | null> {
+  if (!supabase) return null;
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('nakam_uploads')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      return null;
+    }
+
+    const { data } = supabase.storage.from('nakam_uploads').getPublicUrl(filePath);
+    return data.publicUrl;
+  } catch (err) {
+    console.error("Storage error:", err);
+    return null;
   }
 }

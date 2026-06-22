@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowLeft, MapPin, Check, Plus, Store } from "lucide-react";
+import { ArrowLeft, MapPin, Check, Plus, Store, Image as ImageIcon, Loader2 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { adminAddMerchant } from "../supabaseData";
+import { adminAddMerchant, uploadImageToSupabase } from "../supabaseData";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
@@ -32,6 +32,8 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
   const [lng, setLng] = useState(112.5990);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   function LocationMarker() {
     useMapEvents({ click(e) { setLat(e.latlng.lat); setLng(e.latlng.lng); } });
@@ -47,13 +49,22 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
   const handleSave = async () => {
     if (!name || name.length < 3) return;
     setLoading(true);
-    const ok = await adminAddMerchant({ name, campus, emoji, price, lat, lng });
+    
+    let imageUrl = "";
+    if (imageFile) {
+      const url = await uploadImageToSupabase(imageFile);
+      if (url) imageUrl = url;
+    }
+
+    const ok = await adminAddMerchant({ name, campus, emoji, price, lat, lng, image: imageUrl });
     setLoading(false);
     if (ok) {
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
         setName("");
+        setImageFile(null);
+        setImagePreview(null);
       }, 2000);
     } else {
       alert("Gagal menambahkan toko. Pastikan kamu sudah menjalankan SQL untuk menghapus constraint user_id.");
@@ -95,6 +106,36 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
                 value={name} onChange={(e) => setName(e.target.value)} placeholder="Misal: Warkop Pak Man"
                 className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm outline-none placeholder:text-white/30"
               />
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs text-white/60">Gambar Toko (Opsional)</label>
+            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+              {imagePreview ? (
+                <div className="relative">
+                  <img src={imagePreview} alt="Preview" className="h-32 w-full object-cover rounded-xl" />
+                  <button onClick={() => { setImageFile(null); setImagePreview(null); }} className="absolute top-2 right-2 rounded-full bg-black/50 p-1 backdrop-blur">
+                    <Check className="text-white" size={16} />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex cursor-pointer flex-col items-center justify-center gap-2 py-4 text-white/50 hover:text-white/80 transition-colors">
+                  <ImageIcon size={24} />
+                  <span className="text-xs font-medium">Pilih Gambar (Supabase Storage)</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setImageFile(e.target.files[0]);
+                        setImagePreview(URL.createObjectURL(e.target.files[0]));
+                      }
+                    }}
+                  />
+                </label>
+              )}
             </div>
           </div>
           
@@ -153,7 +194,7 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
             success ? "bg-emerald-500 text-white" : loading || !name ? "bg-white/10 text-white/40" : "bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] text-white"
           }`}
         >
-          {loading ? "Menyimpan..." : success ? <><Check size={18} /> Berhasil Disimpan!</> : <><Store size={18} /> Daftarkan Warung</>}
+          {loading ? <><Loader2 size={18} className="animate-spin" /> Menyimpan...</> : success ? <><Check size={18} /> Berhasil Disimpan!</> : <><Store size={18} /> Daftarkan Warung</>}
         </motion.button>
       </div>
     </motion.div>

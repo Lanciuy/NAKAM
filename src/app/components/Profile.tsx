@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
-import { ArrowLeft, Edit3, Shield, Sun, Moon, Store, ChevronRight, Check, Ghost, EyeOff } from "lucide-react";
+import { ArrowLeft, Edit3, Shield, Sun, Moon, Store, ChevronRight, Check, Ghost, EyeOff, Loader2, Camera, Instagram, Twitter } from "lucide-react";
 import { useStore } from "../store";
+import { uploadImageToSupabase } from "../supabaseData";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
@@ -10,6 +11,8 @@ export function ProfileScreen({ onBack, onOpenMerchant, onOpenAdmin, onLogout }:
   const [view, setView] = useState<"main" | "edit" | "privacy">("main");
   const [draft, setDraft] = useState(user);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll({ container: scrollerRef });
   const coverScale = useTransform(scrollY, [-100, 0, 200], [1.3, 1, 1.15]);
@@ -32,8 +35,8 @@ export function ProfileScreen({ onBack, onOpenMerchant, onOpenAdmin, onLogout }:
         {view === "main" && (
           <motion.div key="main" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
             {/* Cover with parallax */}
-            <motion.div style={{ scale: coverScale, y: coverY }} className="relative h-44 overflow-hidden bg-gradient-to-br from-[#FF6B1A] via-[#FF8C42] to-[#FFB347] will-change-transform">
-              <div className="absolute inset-0 opacity-20" style={{backgroundImage: "radial-gradient(circle at 20% 30%, white 0, transparent 30%), radial-gradient(circle at 80% 60%, white 0, transparent 30%)"}} />
+            <motion.div style={{ scale: coverScale, y: coverY, backgroundImage: user.banner ? `url(${user.banner})` : undefined }} className={`relative h-44 overflow-hidden will-change-transform bg-cover bg-center ${!user.banner ? "bg-gradient-to-br from-[#FF6B1A] via-[#FF8C42] to-[#FFB347]" : ""}`}>
+              {!user.banner && <div className="absolute inset-0 opacity-20" style={{backgroundImage: "radial-gradient(circle at 20% 30%, white 0, transparent 30%), radial-gradient(circle at 80% 60%, white 0, transparent 30%)"}} />}
               <button onClick={onBack} className="absolute left-4 top-12 rounded-full bg-black/30 p-2 text-white backdrop-blur-md">
                 <ArrowLeft size={18} />
               </button>
@@ -44,8 +47,12 @@ export function ProfileScreen({ onBack, onOpenMerchant, onOpenAdmin, onLogout }:
 
             {/* Avatar + info */}
             <div className="relative px-5 pb-6">
-              <div className={`absolute -top-12 flex h-24 w-24 items-center justify-center rounded-full border-4 ${theme === "dark" ? "border-[#0a0e27]" : "border-[#F7F9FC]"} bg-gradient-to-br from-[#FF6B1A] to-[#FF8C42] text-3xl text-white`} style={{fontWeight:800}}>
-                {user.avatar}
+              <div className={`absolute -top-12 flex h-24 w-24 items-center justify-center rounded-full border-4 ${theme === "dark" ? "border-[#0a0e27]" : "border-[#F7F9FC]"} bg-gradient-to-br from-[#FF6B1A] to-[#FF8C42] text-3xl text-white overflow-hidden`} style={{fontWeight:800}}>
+                {user.avatar?.startsWith("http") ? (
+                  <img src={user.avatar} alt="avatar" className="h-full w-full object-cover" />
+                ) : (
+                  user.avatar || "M"
+                )}
               </div>
               <div className="pt-14">
                 <h1 className="text-2xl tracking-tight" style={{fontWeight:800}}>{user.name}</h1>
@@ -64,6 +71,22 @@ export function ProfileScreen({ onBack, onOpenMerchant, onOpenAdmin, onLogout }:
                   </div>
                 ))}
               </div>
+
+              {/* Socials */}
+              {(user.socials?.instagram || user.socials?.twitter) && (
+                <div className="mt-3 flex gap-2">
+                  {user.socials.instagram && (
+                    <a href={`https://instagram.com/${user.socials.instagram}`} target="_blank" className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs ${theme === "dark" ? "bg-white/10 text-pink-400" : "bg-pink-50 text-pink-600"}`}>
+                      <Instagram size={12} /> {user.socials.instagram}
+                    </a>
+                  )}
+                  {user.socials.twitter && (
+                    <a href={`https://twitter.com/${user.socials.twitter}`} target="_blank" className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs ${theme === "dark" ? "bg-white/10 text-sky-400" : "bg-sky-50 text-sky-600"}`}>
+                      <Twitter size={12} /> {user.socials.twitter}
+                    </a>
+                  )}
+                </div>
+              )}
 
               {/* Settings */}
               <div className="mt-5 space-y-2">
@@ -93,10 +116,55 @@ export function ProfileScreen({ onBack, onOpenMerchant, onOpenAdmin, onLogout }:
               <h1 className="flex-1 text-lg" style={{fontWeight:800}}>Edit Profil</h1>
               <button onClick={() => { setUser(draft); setView("main"); }} className="rounded-full bg-[#FF6B1A] px-3 py-1 text-xs text-white" style={{fontWeight:700}}>Simpan</button>
             </div>
-            <div className="space-y-3 p-5">
+            <div className="space-y-4 p-5 pb-20">
+              <div className="flex gap-4 items-center">
+                <div className={`relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#FF6B1A] to-[#FF8C42] text-xl text-white overflow-hidden`}>
+                  {draft.avatar?.startsWith("http") ? (
+                    <img src={draft.avatar} className="h-full w-full object-cover" />
+                  ) : draft.avatar || "M"}
+                  {uploadingAvatar && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><Loader2 size={16} className="animate-spin text-white" /></div>}
+                </div>
+                <label className="cursor-pointer rounded-xl bg-white/10 px-4 py-2 text-xs font-bold transition hover:bg-white/20">
+                  Ubah Foto Profil
+                  <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setUploadingAvatar(true);
+                      const url = await uploadImageToSupabase(e.target.files[0]);
+                      if (url) setDraft({ ...draft, avatar: url });
+                      setUploadingAvatar(false);
+                    }
+                  }} />
+                </label>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-white/60">Banner Profil</label>
+                <div className="relative h-24 rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: draft.banner ? `url(${draft.banner})` : undefined }}>
+                  {uploadingBanner ? <Loader2 className="animate-spin" /> : (
+                    <label className="cursor-pointer bg-black/50 p-2 rounded-full text-white backdrop-blur flex items-center gap-2 text-xs pr-3">
+                      <Camera size={14} /> Ganti Cover
+                      <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setUploadingBanner(true);
+                          const url = await uploadImageToSupabase(e.target.files[0]);
+                          if (url) setDraft({ ...draft, banner: url });
+                          setUploadingBanner(false);
+                        }
+                      }} />
+                    </label>
+                  )}
+                </div>
+              </div>
+
               <Field label="Nama Tampilan" value={draft.name} onChange={(v) => setDraft({...draft, name: v})} theme={theme} />
               <Field label="Bio" value={draft.bio} onChange={(v) => setDraft({...draft, bio: v})} theme={theme} multiline />
-              <Field label="Inisial Avatar" value={draft.avatar} onChange={(v) => setDraft({...draft, avatar: v.slice(0,1).toUpperCase()})} theme={theme} />
+              <div className="pt-2 border-t border-white/10">
+                <div className="text-xs font-bold mb-3">Sosial Media</div>
+                <div className="space-y-3">
+                  <Field label="Instagram Username" value={draft.socials?.instagram || ""} onChange={(v) => setDraft({...draft, socials: { ...draft.socials, instagram: v }})} theme={theme} />
+                  <Field label="Twitter / X Username" value={draft.socials?.twitter || ""} onChange={(v) => setDraft({...draft, socials: { ...draft.socials, twitter: v }})} theme={theme} />
+                </div>
+              </div>
             </div>
           </motion.div>
         )}

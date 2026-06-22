@@ -52,23 +52,21 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
 
   return (
     <motion.div
-      initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={spring}
-      className="absolute inset-0 z-[60] flex flex-col bg-gradient-to-b from-[#0a0e27] via-[#1a1f4d] to-[#0a0e27] text-white"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={spring}
+      className="absolute inset-0 z-[60] flex flex-col pointer-events-none text-white"
     >
-      {/* Mock animated map */}
-      <div className="relative flex-1 overflow-hidden">
-        <NavMap progress={progress} mode={mode} />
+      <div className="relative flex-1 overflow-hidden pointer-events-none">
 
         {/* Top bar */}
-        <div className="absolute left-0 right-0 top-0 z-10 flex items-center gap-2 px-4 pt-12">
-          <motion.button whileTap={{scale:0.9}} onClick={onCancel} className="rounded-full bg-white/10 p-2 backdrop-blur-xl">
+        <div className="absolute left-0 right-0 top-0 z-10 flex items-center gap-2 px-4 pt-12 pointer-events-auto">
+          <motion.button whileTap={{scale:0.9}} onClick={onCancel} className="rounded-full bg-black/50 p-2 backdrop-blur-xl border border-white/20 text-white">
             <ArrowLeft size={16} />
           </motion.button>
-          <div className="flex-1 rounded-2xl border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-xl">
-            <div className="text-[10px] text-white/60">Menuju</div>
+          <div className="flex-1 rounded-2xl border border-white/20 bg-black/50 px-3 py-2 backdrop-blur-xl text-white shadow-lg">
+            <div className="text-[10px] text-white/70">Menuju</div>
             <div className="truncate text-sm" style={{fontWeight:700}}>{target.name}</div>
           </div>
-          <button className="rounded-full bg-white/10 p-2 backdrop-blur-xl"><Volume2 size={16} /></button>
+          <button className="rounded-full bg-black/50 p-2 backdrop-blur-xl border border-white/20 text-white shadow-lg"><Volume2 size={16} /></button>
         </div>
 
         {/* Big turn instruction */}
@@ -94,7 +92,7 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
         {arrived && (
           <motion.div
             initial={{scale:0.8, opacity:0}} animate={{scale:1, opacity:1}} transition={spring}
-            className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-white/95 px-7 py-6 text-center text-gray-900 shadow-2xl"
+            className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-white/95 px-7 py-6 text-center text-gray-900 shadow-2xl pointer-events-auto"
           >
             <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl">🎉</div>
             <div className="text-xl tracking-tight" style={{fontWeight:800}}>Sampai!</div>
@@ -105,7 +103,10 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
       </div>
 
       {/* Bottom info panel */}
-      <div className="relative z-10 border-t border-white/10 bg-[#0a0e27]/95 p-4 backdrop-blur-xl">
+      <motion.div 
+        initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={spring}
+        className="relative z-10 border-t border-white/10 bg-[#0a0e27]/95 p-4 backdrop-blur-xl pointer-events-auto shadow-[0_-10px_40px_rgba(0,0,0,0.2)] md:max-w-md md:rounded-t-3xl md:mx-auto md:border-x"
+      >
         <div className="flex gap-1 rounded-2xl bg-white/5 p-1">
           {([
             { k: "walk", l: "Jalan", i: <Footprints size={13} /> },
@@ -146,7 +147,7 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-500/90 py-3 text-sm" style={{fontWeight:700}}>
           <X size={14} /> Akhiri Navigasi
         </motion.button>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
@@ -163,63 +164,4 @@ function Stat({ label, value, icon }: { label: string; value: string; icon: any 
 function formatArrive(mins: number) {
   const d = new Date(Date.now() + mins * 60000);
   return d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-}
-
-function NavMap({ progress, mode }: { progress: number; mode: Mode }) {
-  const d = "M 50 92 Q 30 70 45 50 T 55 18 L 50 8";
-  return (
-    <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1a1f4d" />
-          <stop offset="100%" stopColor="#0a0e27" />
-        </linearGradient>
-        <pattern id="gridn" width="8" height="8" patternUnits="userSpaceOnUse">
-          <path d="M 8 0 L 0 0 0 8" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.3" />
-        </pattern>
-      </defs>
-      <rect width="100" height="100" fill="url(#grad)" />
-      <rect width="100" height="100" fill="url(#gridn)" />
-      {/* fake roads */}
-      <path d="M 0 60 L 100 56" stroke="rgba(255,255,255,0.12)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
-      <path d="M 70 0 L 65 100" stroke="rgba(255,255,255,0.1)" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
-      <path d="M 0 25 L 100 30" stroke="rgba(255,255,255,0.08)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-
-      {/* Full route */}
-      <path d={d} stroke="rgba(255,255,255,0.18)" strokeWidth="2.2" fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" strokeDasharray="2 1.5" />
-      {/* Traveled */}
-      <motion.path
-        d={d} stroke="url(#trav)" strokeWidth="2.2" fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke"
-        pathLength="1" strokeDasharray="1 1" strokeDashoffset={1 - progress / 100}
-      />
-      <defs>
-        <linearGradient id="trav" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stopColor="#3B82F6" />
-          <stop offset="100%" stopColor="#FF6B1A" />
-        </linearGradient>
-      </defs>
-
-      {/* Destination */}
-      <circle cx="50" cy="8" r="2.2" fill="#FF6B1A" stroke="white" strokeWidth="0.8" />
-      {/* Current position dot along path (approx) */}
-      <Dot progress={progress} />
-
-      {/* Mode-specific moving icon */}
-      <text x="50" y="98" textAnchor="middle" fontSize="3.5" fill="rgba(255,255,255,0.3)">{mode === "walk" ? "🚶" : mode === "bike" ? "🏍️" : "🚗"}</text>
-    </svg>
-  );
-}
-
-function Dot({ progress }: { progress: number }) {
-  // approximate position along the path using progress %
-  const t = progress / 100;
-  // simple interpolation along straight-ish: from (50,92) to (50,8)
-  const y = 92 - t * 84;
-  const x = 50 + Math.sin(t * Math.PI * 1.5) * 8;
-  return (
-    <g>
-      <circle cx={x} cy={y} r="3.5" fill="rgba(59,130,246,0.25)" />
-      <circle cx={x} cy={y} r="1.8" fill="#3B82F6" stroke="white" strokeWidth="0.6" />
-    </g>
-  );
 }
