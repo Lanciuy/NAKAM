@@ -23,7 +23,7 @@ function Inner() {
 
   return (
     <div className={`relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden p-0 bg-slate-100 ${theme === "dark" ? "bg-[#020617]" : ""}`}>
-      <div className="relative w-full h-[100dvh] max-w-md mx-auto overflow-hidden bg-white text-slate-900 shadow-[0_0_50px_rgba(0,0,0,0.15)] md:border-x md:border-slate-200">
+      <div className="relative w-full h-[100dvh] overflow-hidden bg-white text-slate-900">
         <AnimatePresence>
           {phase === "splash" && (
             <Splash key="splash" onDone={() => {
