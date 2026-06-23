@@ -6,7 +6,7 @@ import { uploadImageToSupabase } from "../supabaseData";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
-export function ProfileScreen({ onBack, onOpenMerchant, onOpenAdmin, onLogout }: { onBack: () => void; onOpenMerchant: () => void; onOpenAdmin: () => void; onLogout: () => void }) {
+export function ProfileTab({ onOpenMerchant, onOpenAdmin, onLogout }: { onOpenMerchant: () => void; onOpenAdmin: () => void; onLogout: () => void }) {
   const { user, setUser, theme, toggleTheme, ghostMode, setGhostMode, showExpense, setShowExpense, campus } = useStore();
   const [view, setView] = useState<"main" | "edit" | "privacy">("main");
   const [draft, setDraft] = useState(user);
@@ -22,8 +22,8 @@ export function ProfileScreen({ onBack, onOpenMerchant, onOpenAdmin, onLogout }:
   return (
     <motion.div
       ref={scrollerRef}
-      initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={spring}
-      className={`scroll-smooth-y no-scrollbar absolute inset-0 z-50 h-full overflow-y-auto ${theme === "dark" ? "bg-[#0a0e27] text-white" : "bg-[#F7F9FC] text-gray-900"}`}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={spring}
+      className={`scroll-smooth-y no-scrollbar relative w-full h-full pb-24 overflow-y-auto ${theme === "dark" ? "bg-[#0a0e27] text-white" : "bg-[#F7F9FC] text-gray-900"}`}
     >
       <motion.div
         style={{ opacity: titleOpacity }}
@@ -37,9 +37,6 @@ export function ProfileScreen({ onBack, onOpenMerchant, onOpenAdmin, onLogout }:
             {/* Cover with parallax */}
             <motion.div style={{ scale: coverScale, y: coverY, backgroundImage: user.banner ? `url(${user.banner})` : undefined }} className={`relative h-44 overflow-hidden will-change-transform bg-cover bg-center ${!user.banner ? "bg-gradient-to-br from-[#FF6B1A] via-[#FF8C42] to-[#FFB347]" : ""}`}>
               {!user.banner && <div className="absolute inset-0 opacity-20" style={{backgroundImage: "radial-gradient(circle at 20% 30%, white 0, transparent 30%), radial-gradient(circle at 80% 60%, white 0, transparent 30%)"}} />}
-              <button onClick={onBack} className="absolute left-4 top-12 rounded-full bg-black/30 p-2 text-white backdrop-blur-md">
-                <ArrowLeft size={18} />
-              </button>
               <button onClick={() => { setDraft(user); setView("edit"); }} className="absolute right-4 top-12 rounded-full bg-black/30 p-2 text-white backdrop-blur-md">
                 <Edit3 size={16} />
               </button>
