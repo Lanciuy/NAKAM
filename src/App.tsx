@@ -23,7 +23,7 @@ function Inner() {
   const [walletOpen, setWalletOpen] = useState(false);
   const [merchantOpen, setMerchantOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
-  const { theme, supabaseUser } = useStore();
+  const { theme, supabaseUser, logout } = useStore();
 
   const handleOpenWallet = useCallback(() => setWalletOpen(true), []);
   const handleCloseWallet = useCallback(() => setWalletOpen(false), []);
@@ -35,12 +35,13 @@ function Inner() {
   const handleCloseAdmin = useCallback(() => setAdminOpen(false), []);
 
   const handleLogout = useCallback(() => {
+    logout(); // <--- Call the store's logout function here!
     setWalletOpen(false);
     setMerchantOpen(false);
     setAdminOpen(false);
     setPhase("login");
     setActiveTab("home");
-  }, []);
+  }, [logout]);
 
   const handleSplashDone = useCallback(() => {
     if (supabaseUser) setPhase("main");
