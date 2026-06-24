@@ -61,7 +61,7 @@ export const AdminPanel = memo(function AdminPanel({ onBack }: { onBack: () => v
       </div>
     </motion.div>
   );
-}
+});
 
 function TabButton({ id, active, setActive, icon, label }: any) {
   const isActive = active === id;
@@ -137,7 +137,7 @@ function CampusStatBar({ label, count, max, color }: any) {
       </div>
     </div>
   );
-});
+}
 
 function TabData() {
   const [data, setData] = useState<any[]>([]);
