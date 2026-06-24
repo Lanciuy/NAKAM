@@ -101,11 +101,11 @@ export async function deleteEateryByAdmin(id: string): Promise<void> {
 }
 
 export async function adminAddEatery(
-  data: { name: string; campus: string; emoji: string; price: string; lat: number; lng: number; image?: string; filters: string[] }
+  data: { name: string; campus: string; emoji: string; price: string; lat: number; lng: number; image?: string; filters: string[]; menus?: {name: string; price: number; emoji: string}[] }
 ): Promise<boolean> {
   if (!supabase) return false;
   try {
-    const { error } = await supabase.from("eateries").insert({
+    const { data: result, error } = await supabase.from("eateries").insert({
       name: data.name,
       campus: data.campus,
       price_range: data.price,
@@ -117,8 +117,21 @@ export async function adminAddEatery(
       gallery: data.image ? [data.image] : [],
       dominance: 80,
       walk_time: "5 mnt",
-    });
-    return !error;
+    }).select("id").single();
+    
+    if (error || !result) return false;
+
+    if (data.menus && data.menus.length > 0) {
+      const menuRows = data.menus.map(m => ({
+        eatery_id: result.id,
+        name: m.name,
+        price: m.price,
+        emoji: m.emoji,
+      }));
+      await supabase.from("eatery_menu").insert(menuRows);
+    }
+
+    return true;
   } catch {
     return false;
   }

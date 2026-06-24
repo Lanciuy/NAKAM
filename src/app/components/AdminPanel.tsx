@@ -201,8 +201,26 @@ function TabAdd() {
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [menus, setMenus] = useState<{name: string; price: number; emoji: string}[]>([]);
+  const [newMenuName, setNewMenuName] = useState("");
+  const [newMenuPrice, setNewMenuPrice] = useState("");
+  const [newMenuEmoji, setNewMenuEmoji] = useState("🍽️");
+  const MENU_EMOJIS = ["🍽️", "🍜", "🍚", "🍲", "🍗", "🥩", "🍔", "🍕", "🌭", "🥪", "🌮", "🌯", "🥗", "🍨", "🍩", "🍰", "☕", "🧋", "🍹", "🥤"];
+  
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const handleAddMenu = () => {
+    if (!newMenuName || !newMenuPrice) return;
+    setMenus([...menus, { name: newMenuName, price: parseInt(newMenuPrice.replace(/\D/g, "") || "0"), emoji: newMenuEmoji }]);
+    setNewMenuName("");
+    setNewMenuPrice("");
+    setNewMenuEmoji("🍽️");
+  };
+
+  const handleRemoveMenu = (index: number) => {
+    setMenus(menus.filter((_, i) => i !== index));
+  };
 
   function LocationMarker() {
     useMapEvents({ click(e) { setLat(e.latlng.lat); setLng(e.latlng.lng); } });
@@ -227,7 +245,7 @@ function TabAdd() {
       const url = await uploadImageToSupabase(imageFile);
       if (url) imageUrl = url;
     }
-    const ok = await adminAddEatery({ name, campus, emoji, price, lat, lng, image: imageUrl, filters: selectedFilters });
+    const ok = await adminAddEatery({ name, campus, emoji, price, lat, lng, image: imageUrl, filters: selectedFilters, menus });
     setLoading(false);
     if (ok) {
       setSuccess(true);
@@ -237,6 +255,7 @@ function TabAdd() {
         setSelectedFilters([]);
         setImageFile(null);
         setImagePreview(null);
+        setMenus([]);
       }, 2000);
     } else {
       alert("Gagal menyimpan ke database.");
@@ -292,7 +311,40 @@ function TabAdd() {
       </div>
 
       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-        <h2 className="text-sm font-bold text-[#FF6B1A]">2. Label & Filter Khusus</h2>
+        <h2 className="text-sm font-bold text-[#FF6B1A]">2. Menu & Harga</h2>
+        <div className="space-y-3">
+          {menus.map((m, i) => (
+            <div key={i} className="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="text-xl">{m.emoji}</div>
+                <div>
+                  <div className="text-sm font-bold text-gray-900">{m.name}</div>
+                  <div className="text-xs font-bold text-[#FF6B1A]">Rp {m.price.toLocaleString("id-ID")}</div>
+                </div>
+              </div>
+              <button onClick={() => handleRemoveMenu(i)} className="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-full transition-colors">
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+          
+          <div className="flex flex-col gap-3 p-4 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+            <div className="flex gap-2">
+              <select value={newMenuEmoji} onChange={(e) => setNewMenuEmoji(e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-lg outline-none w-1/4">
+                {MENU_EMOJIS.map((e) => <option key={e} value={e}>{e}</option>)}
+              </select>
+              <input value={newMenuName} onChange={(e) => setNewMenuName(e.target.value)} placeholder="Nama Menu" className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none font-bold text-gray-900 flex-1" />
+            </div>
+            <div className="flex gap-2">
+              <input value={newMenuPrice} onChange={(e) => setNewMenuPrice(e.target.value)} placeholder="Harga (Misal: 15000)" type="number" className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none font-bold text-gray-900 flex-1" />
+              <button onClick={handleAddMenu} className="px-4 py-2 bg-[#1a1f4d] text-white rounded-xl text-xs font-bold whitespace-nowrap hover:bg-blue-900 transition-colors">Tambah</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+        <h2 className="text-sm font-bold text-[#FF6B1A]">3. Label & Filter Khusus</h2>
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => {
             const active = selectedFilters.includes(f);
@@ -309,7 +361,7 @@ function TabAdd() {
       </div>
 
       <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-        <h2 className="text-sm font-bold text-[#FF6B1A]">3. Area & Lokasi</h2>
+        <h2 className="text-sm font-bold text-[#FF6B1A]">4. Area & Lokasi</h2>
         <div className="flex gap-2">
           {CAMPUSES.map((c) => (
             <button key={c.code} onClick={() => setCampus(c.code)} className={`flex-1 rounded-xl border p-3 text-center transition-all ${campus === c.code ? "border-[#FF6B1A] bg-orange-50 text-[#FF6B1A]" : "border-gray-200 bg-gray-50 text-gray-600"}`}>
