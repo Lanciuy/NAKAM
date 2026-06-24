@@ -140,8 +140,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // ─── User Profile ───
   const [user, setUserState] = useState(() => {
-    const saved = localStorage.getItem("userProfile");
-    return saved ? JSON.parse(saved) : {
+    const lastUser = localStorage.getItem("lastLoggedInUser");
+    if (lastUser) {
+      const saved = localStorage.getItem("userProfile_" + lastUser);
+      if (saved) return JSON.parse(saved);
+    }
+    const legacy = localStorage.getItem("userProfile");
+    if (legacy) {
+      const parsed = JSON.parse(legacy);
+      if (parsed?.name) return parsed;
+    }
+    return {
       name: "Rangga Pratama",
       bio: "Mahasiswa · Pemburu warkop murah 🍜",
       avatar: "R",
@@ -173,7 +182,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("hideBalance", hideBalance.toString());
     localStorage.setItem("campus", campus);
     localStorage.setItem("transactions", JSON.stringify(transactions));
-    localStorage.setItem("userProfile", JSON.stringify(user));
+    if (user && user.name) {
+      localStorage.setItem("userProfile_" + user.name, JSON.stringify(user));
+      localStorage.setItem("lastLoggedInUser", user.name);
+    }
   }, [theme, budget, globalPromo, flashPromos, hideBalance, campus, transactions, user]);
 
   // ─── Auth: Listen for session changes ───
@@ -246,7 +258,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const login = async (username: string, password: string): Promise<string | null> => {
     const fakeEmail = `${username.toLowerCase().replace(/\s+/g, '')}@nakam.local`;
     if (!supabase) {
-      setUserState(prev => ({ ...prev, name: username, avatar: (username[0] || "M").toUpperCase() }));
+      const saved = localStorage.getItem("userProfile_" + username);
+      if (saved) {
+        setUserState(JSON.parse(saved));
+      } else {
+        setUserState(prev => ({ ...prev, name: username, avatar: (username[0] || "M").toUpperCase() }));
+      }
       return null; // No Supabase = allow any login and mock it
     }
     const { error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password });
@@ -257,7 +274,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const signUp = async (username: string, password: string): Promise<string | null> => {
     const fakeEmail = `${username.toLowerCase().replace(/\s+/g, '')}@nakam.local`;
     if (!supabase) {
-      setUserState(prev => ({ ...prev, name: username, avatar: (username[0] || "M").toUpperCase() }));
+      setUserState({
+        name: username,
+        bio: "Mahasiswa · Pemburu warkop murah 🍜",
+        avatar: (username[0] || "M").toUpperCase(),
+        banner: "",
+        socials: { instagram: "", twitter: "" }
+      });
       return null;
     }
     const { data, error } = await supabase.auth.signUp({ email: fakeEmail, password });
@@ -285,9 +308,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setSupabaseUser(null);
     setMerchantDbId(null);
     setMerchant({
-      onboarded: false, name: "", campus: "UMM", emoji: "🍜",
-      status: "buka", price: "10k - 25k", lat: 0, lng: 0, menu: [], orders: [], views: 0,
+      onboarded: false,
+      name: "",
+      campus: "UMM",
+      emoji: "🍜",
+      status: "buka",
+      price: "10k - 25k",
+      menu: [],
+      orders: [],
+      views: 0,
     });
+    setUserState({
+      name: "",
+      bio: "Mahasiswa · Pemburu warkop murah 🍜",
+      avatar: "",
+      banner: "",
+      socials: { instagram: "", twitter: "" }
+    });
+    localStorage.removeItem("lastLoggedInUser");
   };
 
   // ─── Budget ───
