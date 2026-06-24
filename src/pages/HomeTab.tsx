@@ -4,6 +4,7 @@ import { Search, MapPin, Star, Sparkles, SlidersHorizontal, Bell, Zap } from "lu
 import { useStore, fmtRp } from "@/store/store";
 import { EATERIES_BY_CAMPUS } from "@/data/mockData";
 import { FilterModal, FilterOptions } from "@/components/FilterModal";
+import { TerserahRoulette } from "@/components/TerserahRoulette";
 import { AnimatePresence } from "motion/react";
 
 const SERVICE_CATEGORIES = [
@@ -27,6 +28,7 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet }: { onOpenWallet: (
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isTerserahOpen, setIsTerserahOpen] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({ categories: [], minRating: 0, priceRange: "any" });
 
   useEffect(() => {
@@ -165,6 +167,30 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet }: { onOpenWallet: (
         </div>
       )}
 
+      {/* Terserah Feature Button */}
+      <div className="px-6 mb-6">
+        <button 
+          onClick={() => setIsTerserahOpen(true)}
+          className="w-full relative overflow-hidden rounded-3xl bg-[#121212] text-white p-5 flex items-center justify-between shadow-xl shadow-black/10 active:scale-[0.98] transition-transform group border border-white/10"
+        >
+          {/* Animated background shine */}
+          <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/5 to-transparent group-hover:animate-[shimmer_1.5s_infinite]" />
+          
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6B1A] to-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20 group-hover:scale-110 transition-transform duration-300">
+              <Dice5 size={24} className="text-white group-hover:rotate-180 transition-transform duration-500" />
+            </div>
+            <div className="text-left">
+              <div className="font-black tracking-tight text-lg leading-none mb-1">BINGUNG MAKAN?</div>
+              <div className="text-xs text-gray-400 font-medium">Biar takdir yang memilih (CS2 Style)</div>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center relative z-10 group-hover:bg-white group-hover:text-black transition-colors">
+            <Sparkles size={18} />
+          </div>
+        </button>
+      </div>
+
       {/* Search Bar */}
       <div className="px-6 mb-8 flex gap-3">
         <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3.5 rounded-2xl shadow-sm border border-gray-100">
@@ -240,8 +266,18 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet }: { onOpenWallet: (
         onApply={setFilters}
         initialFilters={filters}
       />
+
+      <TerserahRoulette
+        isOpen={isTerserahOpen}
+        eateries={EATERIES_BY_CAMPUS[campus] || []}
+        onClose={() => setIsTerserahOpen(false)}
+        onAccept={(eatery) => {
+          setIsTerserahOpen(false);
+          // Optional: handle routing to eatery or showing detail
+        }}
+      />
     </div>
-  ), [user, budget, spent, campus, activeFlashPromos, searchQuery, activeCategory, popular, now, isFilterOpen, filters]);
+  ), [user, budget, spent, campus, activeFlashPromos, searchQuery, activeCategory, popular, now, isFilterOpen, isTerserahOpen, filters]);
 });
 // ChevronRight is imported manually here to avoid modifying imports above for simplicity
 function ChevronRight({ size, className }: { size: number, className?: string }) {
