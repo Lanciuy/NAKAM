@@ -318,9 +318,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
     setSupabaseUser(null);
     setMerchantDbId(null);
     setMerchant({
@@ -342,6 +339,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       socials: { instagram: "", twitter: "" }
     });
     localStorage.removeItem("lastLoggedInUser");
+    localStorage.removeItem("userProfile"); // Clean up legacy profile as well
+    
+    if (supabase) {
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.error("Logout error", err);
+      }
+    }
   };
 
   // ─── Budget ───
