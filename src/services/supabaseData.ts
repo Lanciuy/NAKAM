@@ -102,8 +102,8 @@ export async function deleteEateryByAdmin(id: string): Promise<void> {
 
 export async function adminAddEatery(
   data: { name: string; campus: string; emoji: string; price: string; lat: number; lng: number; image?: string; filters: string[]; menus?: {name: string; price: number; emoji: string}[] }
-): Promise<boolean> {
-  if (!supabase) return false;
+): Promise<{success: boolean, error?: string}> {
+  if (!supabase) return {success: false, error: "Supabase tidak terkonfigurasi."};
   try {
     const { data: result, error } = await supabase.from("eateries").insert({
       name: data.name,
@@ -119,7 +119,8 @@ export async function adminAddEatery(
       walk_time: "5 mnt",
     }).select("id").single();
     
-    if (error || !result) return false;
+    if (error) return {success: false, error: error.message};
+    if (!result) return {success: false, error: "Gagal mendapatkan ID insert."};
 
     if (data.menus && data.menus.length > 0) {
       const menuRows = data.menus.map(m => ({
@@ -131,9 +132,9 @@ export async function adminAddEatery(
       await supabase.from("eatery_menu").insert(menuRows);
     }
 
-    return true;
-  } catch {
-    return false;
+    return {success: true};
+  } catch (err: any) {
+    return {success: false, error: err.message || "Unknown error"};
   }
 }
 

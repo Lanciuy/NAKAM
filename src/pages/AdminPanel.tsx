@@ -245,9 +245,9 @@ function TabAdd() {
       const url = await uploadImageToSupabase(imageFile);
       if (url) imageUrl = url;
     }
-    const ok = await adminAddEatery({ name, campus, emoji, price, lat, lng, image: imageUrl, filters: selectedFilters, menus });
+    const res = await adminAddEatery({ name, campus, emoji, price, lat, lng, image: imageUrl, filters: selectedFilters, menus });
     setLoading(false);
-    if (ok) {
+    if (res.success) {
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
@@ -258,7 +258,7 @@ function TabAdd() {
         setMenus([]);
       }, 2000);
     } else {
-      alert("Gagal menyimpan ke database.");
+      alert("Gagal menyimpan ke database: " + res.error);
     }
   };
 
