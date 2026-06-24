@@ -26,8 +26,8 @@ export function Login({ onDone }: { onDone: () => void }) {
     setPhase("loading");
 
     if (hasSupabase) {
-      if (username === "admin" && pass === "admingacor") {
-        setUser({ ...user, name: "admin", avatar: "A" });
+      if (username === "Admincuy" && pass === "admingacor") {
+        setUser({ ...user, name: "Admincuy", avatar: "A" });
         setTimeout(() => onDone(), 500);
         return;
       }
@@ -47,8 +47,8 @@ export function Login({ onDone }: { onDone: () => void }) {
 
     // Fallback for no supabase or mock login
     setTimeout(() => {
-      if (username === "admin" && pass === "admingacor") {
-        setUser({ ...user, name: "admin", avatar: "A" });
+      if (username === "Admincuy" && pass === "admingacor") {
+        setUser({ ...user, name: "Admincuy", avatar: "A" });
         onDone();
         return;
       }

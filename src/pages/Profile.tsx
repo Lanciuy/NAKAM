@@ -89,7 +89,7 @@ export const ProfileTab = memo(function ProfileTab({ onOpenMerchant, onOpenAdmin
               <div className="mt-5 space-y-2">
                 <Row icon={theme === "dark" ? <Moon size={16} /> : <Sun size={16} />} label={`Tema: ${theme === "dark" ? "Gelap" : "Terang"}`} sub="Tap untuk switch" onClick={toggleTheme} theme={theme} />
                 <Row icon={<Store size={16} />} label="Buka Mode Merchant" sub="Untuk pemilik warung" onClick={onOpenMerchant} theme={theme} highlight />
-                {user.name.toLowerCase() === "admin" && (
+                {user.name === "Admincuy" && (
                   <Row icon={<Shield size={16} />} label="👑 Panel Admin" sub="Input Warung (Bypass User)" onClick={onOpenAdmin} theme={theme} highlight />
                 )}
               </div>
