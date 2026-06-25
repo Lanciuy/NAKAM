@@ -33,6 +33,7 @@ const STEP_TEMPLATES = [
 export function Navigator({ target, routeData, onCancel }: { target: any; routeData?: any; onCancel: () => void }) {
   const [mode, setMode] = useState<Mode>("bike");
   const [userPos, setUserPos] = useState<{lat: number, lng: number} | null>(null);
+  const [startDistance, setStartDistance] = useState<number | null>(null);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -45,25 +46,31 @@ export function Navigator({ target, routeData, onCancel }: { target: any; routeD
     }
   }, []);
 
-  const initialDistance = routeData ? routeData.dist / 1000 : 1.5;
-  
-  const currentDistance = userPos 
+  const ROAD_FACTOR = 1.4; // Multiply straight-line distance by 1.4 to approximate road distance
+  const currentStraightDistance = userPos 
     ? getDistance(userPos.lat, userPos.lng, target.lat, target.lng) 
-    : initialDistance;
+    : (routeData ? (routeData.dist / 1000) / ROAD_FACTOR : 1.5);
 
-  // Progress maxes out at 100% when distance is basically 0
-  let progress = ((initialDistance - currentDistance) / initialDistance) * 100;
+  useEffect(() => {
+    if (userPos && startDistance === null) {
+      setStartDistance(currentStraightDistance);
+    }
+  }, [userPos, startDistance, currentStraightDistance]);
+
+  const baseStart = startDistance || currentStraightDistance;
+  let progress = baseStart > 0 ? ((baseStart - currentStraightDistance) / baseStart) * 100 : 0;
   if (progress < 0) progress = 0;
   if (progress > 100) progress = 100;
 
-  const arrived = currentDistance < 0.05; // arrived if within 50 meters
+  const currentRoadDistance = currentStraightDistance * ROAD_FACTOR;
+  const arrived = currentStraightDistance < 0.05; // arrived if within 50 meters straight-line
   
-  const totalMin = Math.max(1, Math.round((currentDistance / SPEEDS[mode]) * 60));
+  const totalMin = Math.max(1, Math.round((currentRoadDistance / SPEEDS[mode]) * 60));
   const etaMin = totalMin;
-  const remainingKm = currentDistance.toFixed(2);
+  const remainingKm = currentRoadDistance.toFixed(2);
 
-  const steps = STEP_TEMPLATES.slice(0, Math.min(5, Math.max(3, Math.round(initialDistance * 2)))).map((s, i, arr) => {
-    const segment = initialDistance / arr.length;
+  const steps = STEP_TEMPLATES.slice(0, Math.min(5, Math.max(3, Math.round(baseStart * ROAD_FACTOR * 2)))).map((s, i, arr) => {
+    const segment = (baseStart * ROAD_FACTOR) / arr.length;
     return { ...s, meters: Math.round(segment * 1000), street: ["Jl. Tlogomas", "Jl. Raya Sengkaling", "Jl. Tirto Utomo", "Gg. Mawar", "Jl. Bendungan"][i] || "Jl. Kampus" };
   });
 
