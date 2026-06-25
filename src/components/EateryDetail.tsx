@@ -17,6 +17,8 @@ export type Eatery = {
   dominance: number;
   price: string;
   tags: string[];
+  rating: number;
+  reviews: number;
   menu: { name: string; price: number; emoji: string }[];
   gallery: string[];
 };
@@ -44,7 +46,7 @@ export function EateryDetail({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 z-30 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 z-[60] bg-black/40 backdrop-blur-sm"
       />
       <motion.div
         initial={{ y: "100%" }}
@@ -58,7 +60,7 @@ export function EateryDetail({
           if (info.offset.y < -80) setExpanded(true);
           else if (info.offset.y > 100) onClose();
         }}
-        className={`absolute left-0 right-0 z-40 overflow-hidden bg-white shadow-2xl ${expanded ? "top-0 bottom-0 rounded-none" : "bottom-0 max-h-[90%] rounded-t-[28px]"}`}
+        className={`absolute left-0 right-0 z-[70] overflow-hidden bg-white shadow-2xl ${expanded ? "top-0 bottom-0 rounded-none" : "bottom-0 max-h-[90%] rounded-t-[28px]"}`}
       >
         {!expanded && (
           <div className="flex justify-center pt-3">
@@ -107,7 +109,8 @@ export function EateryDetail({
               </div>
               <div className="flex items-center gap-1 rounded-xl bg-amber-50 px-2 py-1 text-xs">
                 <Star size={12} fill="#FFB800" stroke="#FFB800" />
-                <span style={{ fontWeight: 700 }}>4.7</span>
+                <span style={{ fontWeight: 700 }}>{eatery.rating?.toFixed(1) || "4.7"}</span>
+                <span className="text-amber-700/60 font-medium ml-0.5">({eatery.reviews || 0})</span>
               </div>
             </div>
 

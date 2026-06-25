@@ -35,15 +35,15 @@ const userIcon = L.divIcon({
   iconAnchor: [12, 12]
 });
 
-function MapUpdater({ center, zoom, bounds }: { center?: [number, number], zoom?: number, bounds?: L.LatLngBoundsExpression }) {
+function MapUpdater({ lat, lng, zoom, bounds }: { lat?: number, lng?: number, zoom?: number, bounds?: L.LatLngBoundsExpression }) {
   const map = useMap();
   useEffect(() => {
     if (bounds) {
       map.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1 });
-    } else if (center) {
-      map.flyTo(center, zoom || map.getZoom(), { duration: 1.5 });
+    } else if (lat !== undefined && lng !== undefined) {
+      map.flyTo([lat, lng], zoom || map.getZoom(), { duration: 1.5 });
     }
-  }, [center, zoom, bounds, map]);
+  }, [lat, lng, zoom, bounds, map]);
   return null;
 }
 
@@ -212,7 +212,7 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
   const isNavMode = !!navTarget;
 
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden bg-white pb-24 flex flex-col font-sans">
+    <div className="relative w-full h-full overflow-hidden bg-white dark:bg-[#0a0e27] flex flex-col font-sans">
       
       {/* Header Overlay (always on top) */}
       {!isNavMode && (
@@ -264,7 +264,8 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
             <Polyline positions={routeData.path} color="#3B82F6" weight={5} opacity={0.8} lineCap="round" lineJoin="round" />
           )}
           <MapUpdater 
-            center={selected ? [selected.lat, selected.lng] : (!mapBounds ? [userPos.lat, userPos.lng] : undefined)} 
+            lat={selected ? selected.lat : (!mapBounds ? userPos.lat : undefined)}
+            lng={selected ? selected.lng : (!mapBounds ? userPos.lng : undefined)}
             bounds={mapBounds} 
             zoom={isMapExpanded || isNavMode ? 16 : 15}
           />
@@ -285,9 +286,9 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
 
       {/* List Section (Bottom Sheet) */}
       {!isMapExpanded && !isNavMode && (
-        <div className="flex-1 min-h-0 bg-white rounded-t-[2.5rem] -mt-8 z-20 relative flex flex-col shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+        <div className="flex-1 min-h-0 bg-white dark:bg-[#0a0e27] rounded-t-[2.5rem] -mt-8 z-20 relative flex flex-col shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
           <div className="pt-6 pb-2 px-6 flex items-center justify-between shrink-0">
-            <h2 className="text-xl font-bold tracking-tight text-gray-900">List of restaurants</h2>
+            <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">List of restaurants</h2>
             <button 
               onClick={() => setCampusOpen(true)}
               className="text-xs font-bold text-[#FF6B1A] bg-orange-50 px-3 py-1.5 rounded-full flex items-center gap-1"
@@ -312,9 +313,9 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
                   <img src={e.image} alt={e.name} className="w-[84px] h-[84px] rounded-2xl object-cover" />
                   <div className="flex-1 py-1 pr-2 flex flex-col justify-center">
                     <div className="flex justify-between items-start mb-1">
-                      <h4 className="text-base font-bold text-gray-900 leading-tight">{e.name}</h4>
+                      <h4 className="text-base font-bold text-gray-900 dark:text-white leading-tight">{e.name}</h4>
                       <div className="flex items-center gap-1 text-[#FFB347] font-bold text-sm">
-                        <Star size={14} fill="currentColor" /> {(e.dominance ? e.dominance / 20 : 4.5).toFixed(1)}
+                        <Star size={14} fill="currentColor" /> {e.rating?.toFixed(1) || "4.7"}
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
@@ -425,7 +426,7 @@ function RouteInfoCard({ target, mode, setMode, routeData, fetching, onClose, on
   return (
     <motion.div
       initial={{ y: "100%", opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: "100%", opacity: 0 }} transition={spring}
-      className="absolute bottom-0 left-0 right-0 z-30 rounded-t-3xl border-t border-gray-200 bg-white p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:max-w-md md:left-auto md:right-8 md:bottom-8 md:rounded-3xl"
+      className="absolute bottom-0 left-0 right-0 z-[60] rounded-t-3xl border-t border-gray-200 bg-white p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:max-w-md md:left-auto md:right-8 md:bottom-8 md:rounded-3xl"
     >
       <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-gray-300 md:hidden" />
       

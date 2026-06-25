@@ -52,8 +52,8 @@ function Inner() {
   const handleLoginDone = useCallback(() => setPhase("main"), []);
 
   return (
-    <div className={`relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden p-0 bg-slate-100 ${theme === "dark" ? "bg-[#020617]" : ""}`}>
-      <div className="relative w-full h-[100dvh] overflow-hidden bg-white text-slate-900 md:max-w-md shadow-2xl">
+    <div className={`relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden p-0 bg-slate-100 ${theme === "dark" ? "dark bg-[#020617]" : ""}`}>
+      <div className="relative w-full h-[100dvh] overflow-hidden bg-white dark:bg-[#0a0e27] text-slate-900 dark:text-white md:max-w-md shadow-2xl">
         <AnimatePresence>
           {phase === "splash" && (
             <Splash key="splash" onDone={handleSplashDone} />
@@ -66,7 +66,7 @@ function Inner() {
               <Login onDone={handleLoginDone} />
             </motion.div>
           ) : phase === "main" ? (
-            <motion.div key="main" className="absolute inset-0 flex flex-col bg-[#F8F9FA]" initial={{ x: "100%" }} animate={{ x: 0 }} transition={spring}>
+            <motion.div key="main" className="absolute inset-0 flex flex-col bg-[#F8F9FA] dark:bg-[#0a0e27]" initial={{ x: "100%" }} animate={{ x: 0 }} transition={spring}>
               <div className="flex-1 relative overflow-hidden">
                 <AnimatePresence mode="wait">
                   {activeTab === "home" && (

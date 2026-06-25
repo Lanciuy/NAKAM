@@ -17,7 +17,7 @@ export function BottomNavBar({ activeTab, onChange }: BottomNavBarProps) {
   ] as const;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-gray-100 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] px-6 py-2 pb-safe md:max-w-md md:mx-auto">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#0a0e27]/90 backdrop-blur-xl border-t border-gray-100 dark:border-white/10 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] px-6 py-2 pb-safe md:max-w-md md:mx-auto">
       <div className="flex justify-between items-center h-14">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -39,7 +39,7 @@ export function BottomNavBar({ activeTab, onChange }: BottomNavBarProps) {
               </div>
               <span
                 className={`text-[10px] transition-colors duration-300 ${
-                  isActive ? "text-[#FF6B1A] font-bold" : "text-gray-400 font-medium"
+                  isActive ? "text-[#FF6B1A] font-bold" : "text-gray-400 dark:text-gray-500 font-medium"
                 }`}
               >
                 {tab.label}

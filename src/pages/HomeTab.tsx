@@ -222,7 +222,7 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery 
   const todayTxCount = transactions.filter((t) => t.date === "Baru saja" || t.date === "Hari ini").length;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F9FA] pb-24 font-sans text-slate-800">
+    <div className="flex flex-col min-h-screen bg-[#F8F9FA] dark:bg-[#0a0e27] pb-24 font-sans text-slate-800 dark:text-slate-200">
 
       {/* ═══════════ HEADER ═══════════ */}
       <div className="px-6 pt-12 pb-2 flex items-center justify-between">
@@ -239,15 +239,15 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery 
             <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white" />
           </div>
           <div>
-            <div className="text-xs text-gray-500 font-medium">{getGreeting()},</div>
-            <div className="text-xl font-bold tracking-tight text-gray-900">{user.name || "Mahasiswa"}!</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">{getGreeting()},</div>
+            <div className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">{user.name || "Mahasiswa"}!</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="px-2.5 py-1 rounded-full bg-orange-50 border border-orange-100 text-[10px] font-bold text-[#FF6B1A] flex items-center gap-1">
+          <div className="px-2.5 py-1 rounded-full bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 text-[10px] font-bold text-[#FF6B1A] flex items-center gap-1">
             <MapPin size={10} /> {campus}
           </div>
-          <button className="relative w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-700 border border-gray-100 active:scale-95 transition-transform">
+          <button className="relative w-10 h-10 bg-white dark:bg-white/10 rounded-full flex items-center justify-center shadow-sm text-gray-700 dark:text-white border border-gray-100 dark:border-white/10 active:scale-95 transition-transform">
             <Bell size={20} />
             {activeFlashPromos.length > 0 && (
               <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">{activeFlashPromos.length}</span>
@@ -318,7 +318,7 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery 
       <div className="px-6 mb-5">
         <button
           onClick={onOpenWallet}
-          className="w-full bg-white p-4 rounded-2xl shadow-sm border border-gray-100 active:scale-[0.98] transition-transform"
+          className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 active:scale-[0.98] transition-transform"
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -355,26 +355,26 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery 
 
       {/* ═══════════ QUICK STATS STRIP ═══════════ */}
       <div className="px-6 mb-5 grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm text-center">
+        <div className="bg-white dark:bg-white/5 rounded-2xl p-3 border border-gray-100 dark:border-white/10 shadow-sm text-center">
           <div className="flex items-center justify-center gap-1 text-[#FF6B1A] mb-1">
             <Store size={14} />
           </div>
-          <div className="text-lg font-bold text-gray-900">{totalEateries}</div>
-          <div className="text-[10px] text-gray-500 font-medium">Tempat Makan</div>
+          <div className="text-lg font-bold text-gray-900 dark:text-white">{totalEateries}</div>
+          <div className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Tempat Makan</div>
         </div>
-        <div className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm text-center">
+        <div className="bg-white dark:bg-white/5 rounded-2xl p-3 border border-gray-100 dark:border-white/10 shadow-sm text-center">
           <div className="flex items-center justify-center gap-1 text-emerald-500 mb-1">
             <UtensilsCrossed size={14} />
           </div>
-          <div className="text-lg font-bold text-gray-900">{totalMenuItems}</div>
-          <div className="text-[10px] text-gray-500 font-medium">Menu Tersedia</div>
+          <div className="text-lg font-bold text-gray-900 dark:text-white">{totalMenuItems}</div>
+          <div className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Menu Tersedia</div>
         </div>
-        <div className="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm text-center">
+        <div className="bg-white dark:bg-white/5 rounded-2xl p-3 border border-gray-100 dark:border-white/10 shadow-sm text-center">
           <div className="flex items-center justify-center gap-1 text-violet-500 mb-1">
             <TrendingUp size={14} />
           </div>
-          <div className="text-lg font-bold text-gray-900">{todayTxCount}</div>
-          <div className="text-[10px] text-gray-500 font-medium">Transaksi Hari Ini</div>
+          <div className="text-lg font-bold text-gray-900 dark:text-white">{todayTxCount}</div>
+          <div className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Transaksi Hari Ini</div>
         </div>
       </div>
 
@@ -440,13 +440,13 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery 
 
       {/* ═══════════ SEARCH BAR ═══════════ */}
       <div className="px-6 mb-6 flex gap-3">
-        <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3.5 rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex-1 flex items-center gap-3 bg-white dark:bg-white/5 px-4 py-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
           <Search size={20} className="text-[#FF6B1A]" />
           <input
             placeholder="Cari tempat makan atau menu..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-gray-400 text-gray-800"
+            className="flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-gray-400 text-gray-800 dark:text-white"
           />
         </div>
         <button onClick={() => setIsFilterOpen(true)} className="w-[52px] h-[52px] flex-shrink-0 bg-[#FF6B1A] rounded-2xl flex items-center justify-center text-white shadow-md shadow-orange-500/20 active:scale-95 transition-transform">
