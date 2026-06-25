@@ -505,7 +505,16 @@ function formatRelativeTime(isoDate: string): string {
 // ─── Storage ───
 
 export async function uploadImageToSupabase(file: File): Promise<string | null> {
-  if (!supabase) return null;
+  // Fallback: convert to Base64 data URL when Supabase storage is unavailable.
+  // This allows local/demo users to upload and persist avatars & banners.
+  if (!supabase) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
   try {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;

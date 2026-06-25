@@ -113,6 +113,26 @@ const Ctx = createContext<Store | null>(null);
 
 const MOCK_ORDER_POOL = ["Nasi Goreng", "Es Teh Jumbo", "Mie Godog", "Indomie Telor", "Geprek Lvl 3", "Kopi Susu"];
 
+// Helper: create per-user localStorage key
+function userKey(username: string, key: string) {
+  return `${key}__${username}`;
+}
+
+// Helper: load from per-user localStorage with fallback to global key (migration)
+function loadUserLS<T>(username: string, key: string, fallback: T): T {
+  // Try per-user key first
+  const perUser = localStorage.getItem(userKey(username, key));
+  if (perUser !== null) {
+    try { return JSON.parse(perUser); } catch { return perUser as unknown as T; }
+  }
+  // Fallback to old global key for migration
+  const global = localStorage.getItem(key);
+  if (global !== null) {
+    try { return JSON.parse(global); } catch { return global as unknown as T; }
+  }
+  return fallback;
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   // ─── Auth ───
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
@@ -122,17 +142,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<"light" | "dark">(() => (localStorage.getItem("theme") as "light" | "dark") || "light");
 
   // ─── Budget & Wallet ───
-  const [budget, setBudgetState] = useState(() => parseInt(localStorage.getItem("budget") || "0", 10));
+  const [budget, setBudgetState] = useState(0);
   const [globalPromo, setGlobalPromoState] = useState(() => localStorage.getItem("globalPromo") || "");
   const [flashPromos, setFlashPromos] = useState<FlashPromo[]>(() => {
     const saved = localStorage.getItem("flashPromos");
     return saved ? JSON.parse(saved) : [];
   });
-  const [hideBalance, setHide] = useState(() => localStorage.getItem("hideBalance") === "true");
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    const saved = localStorage.getItem("transactions");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [hideBalance, setHide] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   // ─── Campus & Settings ───
   const [campus, setCampusState] = useState(() => localStorage.getItem("campus") || "UMM");
@@ -152,9 +169,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (parsed?.name) return parsed;
     }
     return {
-      name: "Rangga Pratama",
+      name: "",
       bio: "Mahasiswa · Pemburu warkop murah 🍜",
-      avatar: "R",
+      avatar: "",
       banner: "",
       socials: { instagram: "", twitter: "" }
     };
@@ -174,24 +191,40 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   });
   const [merchantDbId, setMerchantDbId] = useState<string | null>(null);
 
-  // ─── Sync localStorage ───
+  // ─── Helper: restore per-user local state from localStorage ───
+  const restoreLocalUserState = useCallback((username: string) => {
+    setTransactions(loadUserLS<Transaction[]>(username, "transactions", []));
+    setBudgetState(loadUserLS<number>(username, "budget", 0));
+    setHide(loadUserLS<boolean>(username, "hideBalance", false));
+    setCampusState(loadUserLS<string>(username, "campus", "UMM"));
+    const savedTheme = loadUserLS<string>(username, "theme", "light");
+    if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
+  }, []);
+
+  // ─── Sync localStorage (per-user) ───
   useEffect(() => {
+    if (!user || !user.name) return;
+    const uname = user.name;
     localStorage.setItem("theme", theme);
-    localStorage.setItem("budget", budget.toString());
+    localStorage.setItem(userKey(uname, "theme"), JSON.stringify(theme));
+    localStorage.setItem(userKey(uname, "budget"), JSON.stringify(budget));
     localStorage.setItem("globalPromo", globalPromo);
     localStorage.setItem("flashPromos", JSON.stringify(flashPromos));
-    localStorage.setItem("hideBalance", hideBalance.toString());
-    localStorage.setItem("campus", campus);
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-    if (user && user.name) {
-      localStorage.setItem("userProfile_" + user.name, JSON.stringify(user));
-      localStorage.setItem("lastLoggedInUser", user.name);
-    }
+    localStorage.setItem(userKey(uname, "hideBalance"), JSON.stringify(hideBalance));
+    localStorage.setItem(userKey(uname, "campus"), JSON.stringify(campus));
+    localStorage.setItem(userKey(uname, "transactions"), JSON.stringify(transactions));
+    localStorage.setItem("userProfile_" + uname, JSON.stringify(user));
+    localStorage.setItem("lastLoggedInUser", uname);
   }, [theme, budget, globalPromo, flashPromos, hideBalance, campus, transactions, user]);
 
   // ─── Auth: Listen for session changes ───
   useEffect(() => {
     if (!supabase) {
+      // In local mode, restore per-user data for the last logged-in user on mount
+      const lastUser = localStorage.getItem("lastLoggedInUser");
+      if (lastUser) {
+        restoreLocalUserState(lastUser);
+      }
       setAuthLoading(false);
       return;
     }
@@ -263,8 +296,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (saved) {
         setUserState(JSON.parse(saved));
       } else {
-        setUserState(prev => ({ ...prev, name: username, avatar: (username[0] || "M").toUpperCase() }));
+        setUserState({ name: username, bio: "Mahasiswa · Pemburu warkop murah 🍜", avatar: (username[0] || "M").toUpperCase(), banner: "", socials: { instagram: "", twitter: "" } });
       }
+      // Restore per-user data from localStorage
+      restoreLocalUserState(username);
       return null; // No Supabase = allow any login and mock it
     }
     const { error } = await supabase.auth.signInWithPassword({ email: fakeEmail, password });
@@ -298,6 +333,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         banner: "",
         socials: { instagram: "", twitter: "" }
       });
+      // New account: initialize with empty per-user data
+      restoreLocalUserState(username);
       return null;
     }
     const { data, error } = await supabase.auth.signUp({ email: fakeEmail, password });
@@ -585,6 +622,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         toggleMenuAvailable,
         pushMockOrder,
         completeOrder,
+        deleteStore,
       }}
     >
       {children}
