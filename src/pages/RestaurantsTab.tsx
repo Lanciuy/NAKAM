@@ -285,7 +285,7 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
       </div>
 
       {/* List Section (Bottom Sheet) */}
-      {!isMapExpanded && !isNavMode && (
+      {!isMapExpanded && !isNavMode && !routeTarget && (
         <div className="flex-1 min-h-0 bg-white dark:bg-[#0a0e27] rounded-t-[2.5rem] -mt-8 z-20 relative flex flex-col shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
           <div className="pt-6 pb-2 px-6 flex items-center justify-between shrink-0">
             <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">List of restaurants</h2>
@@ -415,66 +415,88 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
 
 function RouteInfoCard({ target, mode, setMode, routeData, fetching, onClose, onStart }: any) {
   const modes = [
-    { k: "walk" as const, l: "Jalan", i: <Footprints size={14} /> },
-    { k: "bike" as const, l: "Motor", i: <Bike size={14} /> },
-    { k: "car" as const, l: "Mobil", i: <Car size={14} /> },
+    { k: "walk" as const, l: "Jalan", i: <Footprints size={16} /> },
+    { k: "bike" as const, l: "Motor", i: <Bike size={16} /> },
+    { k: "car" as const, l: "Mobil", i: <Car size={16} /> },
   ];
 
   const distKm = routeData ? (routeData.dist / 1000).toFixed(1) : "-";
   const mins = routeData ? Math.max(1, Math.round(routeData.dur / 60)) : "-";
 
   return (
-    <motion.div
-      initial={{ y: "100%", opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: "100%", opacity: 0 }} transition={spring}
-      className="absolute bottom-0 left-0 right-0 z-[60] rounded-t-3xl border-t border-gray-200 bg-white p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:max-w-md md:left-auto md:right-8 md:bottom-8 md:rounded-3xl"
-    >
-      <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-gray-300 md:hidden" />
-      
-      <div className="flex items-start gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#FF6B1A] text-white shadow-lg">
-          <Navigation size={24} />
-        </div>
-        <div className="flex-1 pt-1">
-          <div className="text-[10px] uppercase tracking-widest text-blue-600" style={{fontWeight:800}}>Rute Pilihan</div>
-          <div className="text-xl tracking-tight text-gray-900" style={{fontWeight:800}}>{target.name}</div>
-        </div>
-        <button onClick={onClose} className="rounded-full bg-gray-100 p-2 text-gray-500 hover:bg-gray-200"><X size={16} /></button>
-      </div>
-
-      <div className="mt-5 flex gap-2 rounded-2xl bg-gray-100 p-1.5 shadow-inner">
-        {modes.map((m) => {
-          const active = mode === m.k;
-          return (
-            <button key={m.k} onClick={() => setMode(m.k)} className={`relative flex-1 rounded-xl py-2.5 text-xs ${active ? "text-white" : "text-gray-600 hover:bg-gray-200/50"}`} style={{fontWeight:800}}>
-              {active && <motion.div layoutId="modeb" transition={spring} className="absolute inset-0 rounded-xl bg-[#1a1f4d] shadow-md" />}
-              <span className="relative flex items-center justify-center gap-1.5">{m.i}{m.l}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 text-center">
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider" style={{fontWeight:700}}>Jarak Aktual</div>
-          <div className="mt-0.5 text-xl text-gray-900 flex items-center justify-center gap-2" style={{fontWeight:800}}>
-            {fetching ? <Loader2 size={16} className="animate-spin text-gray-400" /> : `${distKm} km`}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-gray-100 bg-gray-50 p-3 text-center">
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider" style={{fontWeight:700}}>Estimasi Waktu</div>
-          <div className="mt-0.5 flex items-center justify-center gap-1.5 text-xl text-emerald-600" style={{fontWeight:800}}>
-            {fetching ? <Loader2 size={16} className="animate-spin text-emerald-400" /> : <><Clock size={16} /> {mins} mnt</>}
-          </div>
-        </div>
-      </div>
-
-      <motion.button
-        whileTap={{scale:0.97}} onClick={onStart} disabled={fetching || !routeData}
-        className={`mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-white shadow-xl transition-opacity ${fetching || !routeData ? "opacity-50 bg-gray-400" : "bg-gradient-to-r from-[#1a1f4d] to-blue-900"}`}
-        style={{fontWeight:800}}
+    <>
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="absolute inset-0 z-[50] bg-black/10 backdrop-blur-[2px]"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={spring}
+        drag="y"
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={0.2}
+        onDragEnd={(_, info) => {
+          if (info.offset.y > 80 || info.velocity.y > 500) onClose();
+        }}
+        className="absolute bottom-0 left-0 right-0 z-[60] rounded-t-[32px] bg-white dark:bg-[#0f172a] shadow-[0_-15px_40px_rgba(0,0,0,0.15)] md:max-w-md md:left-auto md:right-8 md:bottom-8 md:rounded-3xl"
       >
-        <Navigation size={18} /> {fetching ? "Mencari Rute Terbaik..." : "Mulai Navigasi"}
-      </motion.button>
-    </motion.div>
+        <div className="p-6">
+          <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-gray-300 dark:bg-gray-700" />
+          
+          <div className="flex items-start gap-4 mb-6">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-500/20 text-[#FF6B1A]">
+              <Navigation size={24} className="ml-0.5" />
+            </div>
+            <div className="flex-1 pt-1">
+              <div className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1">Rute Pilihan</div>
+              <div className="text-xl font-extrabold text-gray-900 dark:text-white leading-none">{target.name}</div>
+            </div>
+            <button onClick={onClose} className="rounded-full bg-gray-100 dark:bg-white/10 p-2.5 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="flex gap-2 rounded-2xl bg-gray-50 dark:bg-white/5 p-1.5 mb-6">
+            {modes.map((m) => {
+              const active = mode === m.k;
+              return (
+                <button 
+                  key={m.k} 
+                  onClick={() => setMode(m.k)} 
+                  className={`relative flex-1 rounded-xl py-3 text-sm font-bold transition-colors ${active ? "text-[#FF6B1A]" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
+                >
+                  {active && <motion.div layoutId="modebg" className="absolute inset-0 rounded-xl bg-white dark:bg-white/10 shadow-sm" transition={spring} />}
+                  <span className="relative flex items-center justify-center gap-2 z-10">{m.i}{m.l}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1e293b] p-4 shadow-sm">
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Jarak Aktual</div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white flex items-center justify-center gap-2">
+                {fetching ? <Loader2 size={20} className="animate-spin text-gray-400" /> : `${distKm} km`}
+              </div>
+            </div>
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1e293b] p-4 shadow-sm">
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Estimasi Waktu</div>
+              <div className="text-2xl font-black text-emerald-500 flex items-center justify-center gap-2">
+                {fetching ? <Loader2 size={20} className="animate-spin text-emerald-400" /> : <><Clock size={20} /> {mins} min</>}
+              </div>
+            </div>
+          </div>
+
+          <motion.button
+            whileTap={{scale: 0.98}} 
+            onClick={onStart} 
+            disabled={fetching || !routeData}
+            className={`flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-white font-bold text-lg shadow-lg shadow-orange-500/30 transition-all ${fetching || !routeData ? "opacity-50 bg-gray-400" : "bg-[#FF6B1A] hover:bg-[#e85d12]"}`}
+          >
+            <Navigation size={20} /> {fetching ? "Mencari Rute Terbaik..." : "Mulai Navigasi"}
+          </motion.button>
+        </div>
+      </motion.div>
+    </>
   );
 }
