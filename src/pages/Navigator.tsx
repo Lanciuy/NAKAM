@@ -8,7 +8,18 @@ const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 type Mode = "walk" | "bike" | "car";
 
-const SPEEDS: Record<Mode, number> = { walk: 5, bike: 25, car: 35 };
+const SPEEDS: Record<Mode, number> = { walk: 5, bike: 40, car: 20 };
+
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
 
 const STEP_TEMPLATES = [
   { icon: ArrowUp, dir: "Lurus" },
@@ -20,35 +31,44 @@ const STEP_TEMPLATES = [
 ];
 
 export function Navigator({ target, routeData, onCancel }: { target: any; routeData?: any; onCancel: () => void }) {
-  const [mode, setMode] = useState<Mode>("walk");
-  const [progress, setProgress] = useState(0);
-  const [step, setStep] = useState(0);
+  const [mode, setMode] = useState<Mode>("bike");
+  const [userPos, setUserPos] = useState<{lat: number, lng: number} | null>(null);
 
-  const distance = routeData ? routeData.dist / 1000 : 1.5;
-  const totalMin = routeData ? Math.max(1, Math.round(routeData.dur / 60)) : Math.max(1, Math.round((distance / SPEEDS[mode]) * 60));
-  const etaMin = Math.max(0, Math.ceil(totalMin * (1 - progress / 100)));
-  const remainingKm = (distance * (1 - progress / 100)).toFixed(2);
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (err) => console.log(err),
+        { enableHighAccuracy: true }
+      );
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
+  }, []);
 
-  const steps = STEP_TEMPLATES.slice(0, Math.min(5, Math.max(3, Math.round(distance * 2)))).map((s, i, arr) => {
-    const segment = distance / arr.length;
+  const initialDistance = routeData ? routeData.dist / 1000 : 1.5;
+  
+  const currentDistance = userPos 
+    ? getDistance(userPos.lat, userPos.lng, target.lat, target.lng) 
+    : initialDistance;
+
+  // Progress maxes out at 100% when distance is basically 0
+  let progress = ((initialDistance - currentDistance) / initialDistance) * 100;
+  if (progress < 0) progress = 0;
+  if (progress > 100) progress = 100;
+
+  const arrived = currentDistance < 0.05; // arrived if within 50 meters
+  
+  const totalMin = Math.max(1, Math.round((currentDistance / SPEEDS[mode]) * 60));
+  const etaMin = totalMin;
+  const remainingKm = currentDistance.toFixed(2);
+
+  const steps = STEP_TEMPLATES.slice(0, Math.min(5, Math.max(3, Math.round(initialDistance * 2)))).map((s, i, arr) => {
+    const segment = initialDistance / arr.length;
     return { ...s, meters: Math.round(segment * 1000), street: ["Jl. Tlogomas", "Jl. Raya Sengkaling", "Jl. Tirto Utomo", "Gg. Mawar", "Jl. Bendungan"][i] || "Jl. Kampus" };
   });
 
-  useEffect(() => {
-    if (progress >= 100) return;
-    const t = setInterval(() => {
-      setProgress((p) => {
-        const np = Math.min(100, p + 1.2);
-        const segPct = 100 / steps.length;
-        setStep(Math.min(steps.length - 1, Math.floor(np / segPct)));
-        return np;
-      });
-    }, 250);
-    return () => clearInterval(t);
-  }, [steps.length, progress]);
-
+  const step = Math.min(steps.length - 1, Math.floor((progress / 100) * steps.length));
   const StepIcon = steps[step]?.icon || ArrowUp;
-  const arrived = progress >= 100;
 
   return (
     <motion.div

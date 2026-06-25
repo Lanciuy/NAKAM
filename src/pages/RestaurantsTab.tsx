@@ -96,7 +96,7 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
 
   useEffect(() => {
     if (initialRouteTarget) {
-      setNavTarget(initialRouteTarget);
+      setRouteTarget(initialRouteTarget);
       if (onClearRouteTarget) onClearRouteTarget();
     }
   }, [initialRouteTarget, onClearRouteTarget]);
@@ -121,7 +121,7 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
           const coords = route.geometry.coordinates.map((c: any) => [c[1], c[0]] as [number, number]);
           
           const dist = route.distance; 
-          const speeds = { walk: 5, bike: 25, car: 35 }; 
+          const speeds = { walk: 5, bike: 40, car: 20 }; 
           const dur = (dist / 1000) / speeds[routeMode as 'walk'|'bike'|'car'] * 3600;
 
           setRouteData({
