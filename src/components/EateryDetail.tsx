@@ -230,7 +230,7 @@ export function EateryDetail({
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 flex items-center justify-center bg-black/60"
+            className="absolute inset-0 z-[80] flex items-center justify-center bg-black/60"
           >
             <motion.div
               initial={{ y: 30 }}
@@ -266,7 +266,7 @@ function Gallery({ photos, onClose }: { photos: string[]; onClose: () => void })
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 flex flex-col bg-black"
+      className="absolute inset-0 z-[80] flex flex-col bg-black"
     >
       <div className="flex items-center justify-between px-4 pb-3 pt-12 text-white">
         <button onClick={onClose}><X size={22} /></button>
@@ -299,7 +299,7 @@ function CheckInModal({ place, onCancel, onConfirm }: any) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 flex items-end justify-center bg-black/60"
+      className="absolute inset-0 z-[80] flex items-end justify-center bg-black/60"
     >
       <motion.div
         initial={{ y: 200 }}
@@ -333,7 +333,7 @@ function AddExpenseModal({ place, amount, setAmount, onCancel, onConfirm }: any)
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 flex items-end justify-center bg-black/60"
+      className="absolute inset-0 z-[80] flex items-end justify-center bg-black/60"
     >
       <motion.div
         initial={{ y: 400 }}
