@@ -216,25 +216,25 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
       
       {/* Header Overlay (always on top) */}
       {!isNavMode && (
-        <div className="absolute top-0 left-0 right-0 z-20 pt-12 pb-4 px-6 bg-gradient-to-b from-white/90 to-transparent pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 z-20 pt-12 pb-4 px-6 bg-gradient-to-b from-white/90 dark:from-[#0a0e27]/90 to-transparent pointer-events-none">
           <div className="flex items-center justify-between pointer-events-auto">
-            <button className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-700 hover:bg-gray-50 border border-gray-100">
+            <button className="w-10 h-10 rounded-full bg-white dark:bg-white/5 shadow-sm flex items-center justify-center text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/10 border border-gray-100 dark:border-white/10">
               <ChevronLeft size={20} />
             </button>
-            <h1 className="text-lg font-bold text-gray-900 tracking-tight">List of restaurants</h1>
-            <button className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-700 hover:bg-gray-50 border border-gray-100">
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">List of restaurants</h1>
+            <button className="w-10 h-10 rounded-full bg-white dark:bg-white/5 shadow-sm flex items-center justify-center text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/10 border border-gray-100 dark:border-white/10">
               <Heart size={20} />
             </button>
           </div>
           
           <div className="mt-6 flex gap-3 pointer-events-auto">
-            <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3.5 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex-1 flex items-center gap-3 bg-white dark:bg-white/5 px-4 py-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10">
               <Search size={20} className="text-[#FF6B1A]" />
               <input
                 placeholder="Restaurant name or dish..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-gray-400 text-gray-800"
+                className="flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-gray-400 text-gray-800 dark:text-white"
               />
             </div>
             <button onClick={() => setIsFilterOpen(true)} className="w-[52px] h-[52px] flex-shrink-0 bg-[#FF6B1A] rounded-2xl flex items-center justify-center text-white shadow-md shadow-orange-500/20 active:scale-95 transition-transform">
@@ -276,7 +276,7 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
           <div className="absolute bottom-6 right-6 z-10">
             <button 
               onClick={() => setIsMapExpanded(!isMapExpanded)}
-              className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg text-gray-700 hover:text-[#FF6B1A] transition-colors"
+              className="w-12 h-12 bg-white dark:bg-[#1a2340] rounded-full flex items-center justify-center shadow-lg text-gray-700 dark:text-gray-300 hover:text-[#FF6B1A] dark:hover:text-[#FF6B1A] transition-colors"
             >
               {isMapExpanded ? <Minimize2 size={20} /> : <MapPin size={20} />}
             </button>
@@ -291,13 +291,13 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
             <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">List of restaurants</h2>
             <button 
               onClick={() => setCampusOpen(true)}
-              className="text-xs font-bold text-[#FF6B1A] bg-orange-50 px-3 py-1.5 rounded-full flex items-center gap-1"
+              className="text-xs font-bold text-[#FF6B1A] bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 rounded-full flex items-center gap-1"
             >
               <MapPin size={12} /> {campus}
             </button>
           </div>
           
-          <div className="flex-1 overflow-y-auto px-6 pb-6 pt-2 space-y-4 no-scrollbar">
+          <div className="flex-1 overflow-y-auto px-6 pb-32 pt-2 space-y-4 no-scrollbar">
             {eateries.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full opacity-50">
                 <Dice5 size={48} className="mb-2 text-gray-400" />
@@ -308,7 +308,7 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
                 <div 
                   key={e.id}
                   onClick={() => { setSelected(e); setRouteTarget(null); }}
-                  className="flex gap-4 p-3 bg-white rounded-3xl border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+                  className="flex gap-4 p-3 bg-white dark:bg-white/5 rounded-3xl border border-gray-100 dark:border-white/10 shadow-sm cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
                 >
                   <img src={e.image} alt={e.name} className="w-[84px] h-[84px] rounded-2xl object-cover" />
                   <div className="flex-1 py-1 pr-2 flex flex-col justify-center">
@@ -379,27 +379,27 @@ export const RestaurantsTab = memo(function RestaurantsTab({ initialRouteTarget,
             <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={() => setCampusOpen(false)} />
             <motion.div
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={spring}
-              className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-3xl bg-white p-6 shadow-2xl md:max-w-md md:mx-auto md:bottom-1/2 md:translate-y-1/2 md:rounded-3xl"
+              className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-3xl bg-white dark:bg-[#0a0e27] p-6 shadow-2xl md:max-w-md md:mx-auto md:bottom-1/2 md:translate-y-1/2 md:rounded-3xl"
             >
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl tracking-tight" style={{fontWeight:800}}>Pilih Area Kampus</h3>
-                  <p className="text-xs text-gray-500">Sesuaikan dengan lokasimu sekarang.</p>
+                  <h3 className="text-xl tracking-tight text-gray-900 dark:text-white" style={{fontWeight:800}}>Pilih Area Kampus</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Sesuaikan dengan lokasimu sekarang.</p>
                 </div>
-                <button onClick={() => setCampusOpen(false)} className="rounded-full bg-gray-100 p-2 text-gray-600"><X size={16} /></button>
+                <button onClick={() => setCampusOpen(false)} className="rounded-full bg-gray-100 dark:bg-white/10 p-2 text-gray-600 dark:text-gray-300"><X size={16} /></button>
               </div>
               <div className="space-y-3">
                 {CAMPUSES.map((c) => (
                   <motion.button
                     key={c.code} whileTap={{scale:0.98}} onClick={() => switchCampus(c.code)}
-                    className={`flex w-full items-center gap-4 rounded-2xl border p-4 transition-colors ${campus === c.code ? "border-[#FF6B1A] bg-orange-50 shadow-inner" : "border-gray-200 hover:bg-gray-50"}`}
+                    className={`flex w-full items-center gap-4 rounded-2xl border p-4 transition-colors ${campus === c.code ? "border-[#FF6B1A] bg-orange-50 dark:bg-orange-500/10 shadow-inner" : "border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5"}`}
                   >
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF6B1A] to-[#FF8C42] text-white text-sm" style={{fontWeight:800}}>
                       {c.code}
                     </div>
                     <div className="flex-1 text-left">
-                      <div className="text-sm text-gray-900" style={{fontWeight:800}}>{c.name}</div>
-                      <div className="text-xs text-gray-500 mt-0.5">{c.students} mahasiswa</div>
+                      <div className="text-sm text-gray-900 dark:text-white" style={{fontWeight:800}}>{c.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{c.students} mahasiswa</div>
                     </div>
                     {campus === c.code && <div className="h-6 w-6 rounded-full bg-[#FF6B1A] text-white flex items-center justify-center shadow-md"><Check size={14} /></div>}
                   </motion.button>

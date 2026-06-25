@@ -258,9 +258,9 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery 
 
       {/* ═══════════ MEAL SUGGESTION STRIP ═══════════ */}
       <div className="px-6 mb-4">
-        <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 px-4 py-2.5 rounded-2xl">
+        <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 px-4 py-2.5 rounded-2xl">
           <span className="text-base">{getMealSuggestion().split(" ")[0]}</span>
-          <span className="text-xs font-semibold text-amber-700 flex-1">{getMealSuggestion().substring(getMealSuggestion().indexOf(" ") + 1)}</span>
+          <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex-1">{getMealSuggestion().substring(getMealSuggestion().indexOf(" ") + 1)}</span>
           <Timer size={14} className="text-amber-500" />
           <span className="text-[10px] font-bold text-amber-500">
             {new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
@@ -481,7 +481,7 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery 
                 className={`flex flex-col items-center gap-1.5 min-w-[64px] py-2.5 px-2 rounded-2xl text-xs font-medium transition-all border ${
                   isActive
                     ? "bg-[#FF6B1A] text-white border-[#FF6B1A] shadow-md shadow-orange-500/20 scale-105"
-                    : "bg-white text-gray-700 border-gray-100 hover:border-[#FF6B1A]/40"
+                    : "bg-white dark:bg-white/5 text-gray-700 dark:text-gray-300 border-gray-100 dark:border-white/10 hover:border-[#FF6B1A]/40"
                 }`}
               >
                 <span className="text-xl">{cat.emoji}</span>
@@ -494,11 +494,11 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery 
 
       {/* ═══════════ FOOD FACT ═══════════ */}
       <div className="px-6 mb-6">
-        <div className="bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-100 rounded-2xl p-4 flex items-start gap-3">
+        <div className="bg-gradient-to-r from-sky-50 dark:from-sky-500/10 to-indigo-50 dark:to-indigo-500/10 border border-sky-100 dark:border-sky-500/20 rounded-2xl p-4 flex items-start gap-3">
           <span className="text-2xl">{todayFact.emoji}</span>
           <div>
-            <div className="text-[10px] text-sky-600 font-bold uppercase tracking-wider mb-0.5">Tahukah Kamu?</div>
-            <div className="text-xs text-gray-700 font-medium leading-relaxed">{todayFact.text}</div>
+            <div className="text-[10px] text-sky-600 dark:text-sky-400 font-bold uppercase tracking-wider mb-0.5">Tahukah Kamu?</div>
+            <div className="text-xs text-gray-700 dark:text-gray-300 font-medium leading-relaxed">{todayFact.text}</div>
           </div>
         </div>
       </div>
@@ -581,7 +581,7 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery 
       {/* ═══════════ ALL EATERIES LIST ═══════════ */}
       {(searchQuery || activeCategory) && (
         <div className="px-6 mb-6">
-          <h2 className="text-base font-bold text-gray-900 mb-3">
+          <h2 className="text-base font-bold text-gray-900 dark:text-white mb-3">
             Hasil Pencarian {eateries.length > 0 ? `(${eateries.length})` : ""}
           </h2>
           {eateries.length === 0 ? (
