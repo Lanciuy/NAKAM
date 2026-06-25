@@ -65,101 +65,101 @@ export const ProfileTab = memo(function ProfileTab({ onOpenMerchant, onOpenAdmin
             {/* ═══════ COVER WITH PARALLAX ═══════ */}
             <motion.div
               style={{ scale: coverScale, y: coverY, backgroundImage: user.banner ? `url(${user.banner})` : undefined }}
-              className={`relative h-48 overflow-hidden will-change-transform bg-cover bg-center ${!user.banner ? "bg-gradient-to-br from-[#FF6B1A] via-[#FF8C42] to-[#FFB347]" : ""}`}
+              className={`relative h-56 overflow-hidden will-change-transform bg-cover bg-center ${!user.banner ? "bg-gradient-to-br from-indigo-900 via-slate-800 to-black" : ""}`}
             >
               {!user.banner && (
-                <div className="absolute inset-0 opacity-20" style={{backgroundImage: "radial-gradient(circle at 20% 30%, white 0, transparent 30%), radial-gradient(circle at 80% 60%, white 0, transparent 30%)"}} />
+                <div className="absolute inset-0 opacity-30" style={{backgroundImage: "radial-gradient(circle at 20% 30%, white 0, transparent 30%), radial-gradient(circle at 80% 60%, white 0, transparent 30%)"}} />
               )}
-              {/* Gradient overlay at bottom for smooth transition */}
-              <div className={`absolute bottom-0 left-0 right-0 h-24 ${isDark ? "bg-gradient-to-t from-[#0a0e27]" : "bg-gradient-to-t from-[#F7F9FC]"}`} />
+              {/* Premium Gradients */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
+              <div className={`absolute bottom-0 left-0 right-0 h-32 ${isDark ? "bg-gradient-to-t from-[#0a0e27]" : "bg-gradient-to-t from-[#F7F9FC]"}`} />
               <button
                 onClick={() => { setDraft(user); setView("edit"); }}
-                className="absolute right-4 top-12 rounded-full bg-black/30 p-2.5 text-white backdrop-blur-md hover:bg-black/40 transition-colors"
+                className="absolute right-5 top-12 rounded-full bg-white/10 p-2.5 text-white backdrop-blur-xl border border-white/20 hover:bg-white/20 transition-all shadow-lg"
               >
                 <Edit3 size={16} />
               </button>
             </motion.div>
 
             {/* ═══════ AVATAR + INFO ═══════ */}
-            <div className="relative px-5 pb-6 -mt-6">
-              <div className={`absolute -top-12 flex h-[88px] w-[88px] items-center justify-center rounded-full border-4 ${isDark ? "border-[#0a0e27]" : "border-[#F7F9FC]"} bg-gradient-to-br from-[#FF6B1A] to-[#FF8C42] text-3xl text-white overflow-hidden shadow-lg shadow-orange-500/20`}>
-                {user.avatar?.startsWith("http") || user.avatar?.startsWith("data:") ? (
-                  <img src={user.avatar} alt="avatar" className="h-full w-full object-cover" />
-                ) : (
-                  <span className="font-extrabold">{user.avatar || user.name?.[0]?.toUpperCase() || "?"}</span>
-                )}
+            <div className="relative px-5 pb-6 -mt-10">
+              <div className="relative inline-block">
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-orange-500 to-pink-500 blur-sm opacity-60" />
+                <div className={`relative flex h-24 w-24 items-center justify-center rounded-full border-[3px] ${isDark ? "border-[#0a0e27]" : "border-[#F7F9FC]"} bg-gradient-to-br from-slate-800 to-black text-4xl text-white overflow-hidden shadow-2xl`}>
+                  {user.avatar?.startsWith("http") || user.avatar?.startsWith("data:") ? (
+                    <img src={user.avatar} alt="avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-white/50">{user.avatar || user.name?.[0]?.toUpperCase() || "?"}</span>
+                  )}
+                </div>
               </div>
-              <div className="pt-16">
-                <h1 className="text-2xl font-extrabold tracking-tight">{user.name || "Pengguna Baru"}</h1>
-                <p className={`text-sm mt-0.5 ${isDark ? "text-white/60" : "text-gray-500"}`}>{user.bio}</p>
-                <div className="mt-2.5 flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${isDark ? "bg-orange-500/15 text-orange-400" : "bg-orange-100 text-orange-700"}`}>
-                    <MapPin size={11} /> {campus}
+              <div className="pt-3">
+                <h1 className="text-3xl font-black tracking-tighter">{user.name || "Pengguna Baru"}</h1>
+                <p className={`text-sm mt-1 font-medium ${isDark ? "text-white/60" : "text-gray-500"}`}>{user.bio || "Tuliskan bio kerenmu di sini..."}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${isDark ? "bg-orange-500/10 border border-orange-500/20 text-orange-400" : "bg-orange-50 border border-orange-100 text-orange-600"}`}>
+                    <MapPin size={12} /> {campus}
                   </span>
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${isDark ? "bg-emerald-500/15 text-emerald-400" : "bg-emerald-100 text-emerald-700"}`}>
-                    <Calendar size={11} /> {memberSince}
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${isDark ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-emerald-50 border border-emerald-100 text-emerald-600"}`}>
+                    <Calendar size={12} /> {memberSince}
                   </span>
                 </div>
               </div>
 
               {/* ═══════ SOCIALS ═══════ */}
               {(user.socials?.instagram || user.socials?.twitter) && (
-                <div className="mt-3 flex gap-2">
+                <div className="mt-4 flex gap-2">
                   {user.socials.instagram && (
-                    <a href={`https://instagram.com/${user.socials.instagram}`} target="_blank" rel="noreferrer" className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${isDark ? "bg-white/10 text-pink-400 hover:bg-white/15" : "bg-pink-50 text-pink-600 hover:bg-pink-100"}`}>
-                      <Instagram size={13} /> {user.socials.instagram}
+                    <a href={`https://instagram.com/${user.socials.instagram}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-sm ${isDark ? "bg-white/[0.03] border border-white/5 text-pink-400 hover:bg-white/10" : "bg-white border border-gray-100 text-pink-600 hover:bg-pink-50"}`}>
+                      <Instagram size={14} /> {user.socials.instagram}
                     </a>
                   )}
                   {user.socials.twitter && (
-                    <a href={`https://twitter.com/${user.socials.twitter}`} target="_blank" rel="noreferrer" className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${isDark ? "bg-white/10 text-sky-400 hover:bg-white/15" : "bg-sky-50 text-sky-600 hover:bg-sky-100"}`}>
-                      <Twitter size={13} /> {user.socials.twitter}
+                    <a href={`https://twitter.com/${user.socials.twitter}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-sm ${isDark ? "bg-white/[0.03] border border-white/5 text-sky-400 hover:bg-white/10" : "bg-white border border-gray-100 text-sky-600 hover:bg-sky-50"}`}>
+                      <Twitter size={14} /> {user.socials.twitter}
                     </a>
                   )}
                 </div>
               )}
 
               {/* ═══════ STATS CARDS ═══════ */}
-              <div className={`mt-5 grid grid-cols-3 gap-2.5 rounded-2xl p-3.5 ${isDark ? "bg-white/[0.04] border border-white/10 backdrop-blur-md" : "bg-white shadow-sm"}`}>
-                <StatCard icon={<MapPin size={14} />} value={uniquePlaces} label="Tempat" color="text-orange-500" isDark={isDark} />
-                <StatCard icon={<Receipt size={14} />} value={totalTransactions} label="Transaksi" color="text-blue-500" isDark={isDark} />
-                <StatCard icon={<TrendingUp size={14} />} value={avgPerTransaction > 0 ? fmtRp(avgPerTransaction) : "-"} label="Rata-rata" color="text-emerald-500" isDark={isDark} />
+              <div className={`mt-6 grid grid-cols-3 gap-3 rounded-[1.5rem] p-4 ${isDark ? "bg-white/[0.02] border border-white/5 backdrop-blur-2xl shadow-2xl shadow-black/50" : "bg-white shadow-md border border-gray-100"}`}>
+                <StatCard icon={<MapPin size={16} />} value={uniquePlaces} label="Tempat" color="text-orange-500" isDark={isDark} />
+                <StatCard icon={<Receipt size={16} />} value={totalTransactions} label="Transaksi" color="text-blue-500" isDark={isDark} />
+                <StatCard icon={<TrendingUp size={16} />} value={avgPerTransaction > 0 ? fmtRp(avgPerTransaction) : "-"} label="Rata-rata" color="text-emerald-500" isDark={isDark} />
               </div>
 
               {/* ═══════ SPENDING OVERVIEW CARD ═══════ */}
-              <div className={`mt-3 rounded-2xl p-4 ${isDark ? "bg-white/[0.04] border border-white/10" : "bg-white shadow-sm"}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${isDark ? "bg-orange-500/15" : "bg-orange-100"}`}>
-                      <CreditCard size={14} className="text-orange-500" />
+              <div className={`mt-4 overflow-hidden rounded-[1.5rem] p-5 relative ${isDark ? "bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10" : "bg-gradient-to-br from-white to-gray-50 shadow-md border border-gray-100"}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${isDark ? "bg-orange-500/10 text-orange-400" : "bg-orange-100 text-orange-500"}`}>
+                      <CreditCard size={16} />
                     </div>
-                    <span className="text-sm font-bold">Ringkasan Pengeluaran</span>
+                    <span className="text-sm font-extrabold tracking-tight">Ringkasan Budget</span>
                   </div>
-                  <span className={`text-xs font-semibold ${isDark ? "text-white/40" : "text-gray-400"}`}>{totalTransactions} transaksi</span>
                 </div>
                 <div className="flex items-end justify-between">
                   <div>
-                    <div className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>Total Pengeluaran</div>
-                    <div className="text-xl font-black text-orange-500">{fmtRp(totalSpent)}</div>
+                    <div className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-white/40" : "text-gray-400"}`}>Total Pengeluaran</div>
+                    <div className="text-2xl font-black text-orange-500 tracking-tight mt-0.5">{fmtRp(totalSpent)}</div>
                   </div>
                   {budget > 0 && (
                     <div className="text-right">
-                      <div className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>Sisa Budget</div>
-                      <div className={`text-lg font-extrabold ${(budget - totalSpent) >= 0 ? "text-emerald-500" : "text-red-500"}`}>{fmtRp(Math.max(0, budget - totalSpent))}</div>
+                      <div className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? "text-white/40" : "text-gray-400"}`}>Sisa Budget</div>
+                      <div className={`text-xl font-black tracking-tight mt-0.5 ${(budget - totalSpent) >= 0 ? "text-emerald-500" : "text-red-500"}`}>{fmtRp(Math.max(0, budget - totalSpent))}</div>
                     </div>
                   )}
                 </div>
                 {budget > 0 && (
-                  <div className="mt-3">
-                    <div className={`h-2 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-100"}`}>
+                  <div className="mt-4">
+                    <div className={`h-2.5 rounded-full overflow-hidden ${isDark ? "bg-white/5" : "bg-gray-100"} shadow-inner`}>
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${Math.min(100, (totalSpent / budget) * 100)}%` }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className={`h-full rounded-full ${(totalSpent / budget) > 0.8 ? "bg-red-500" : (totalSpent / budget) > 0.5 ? "bg-amber-500" : "bg-emerald-500"}`}
+                        transition={{ duration: 1, ease: "circOut" }}
+                        className={`h-full rounded-full ${(totalSpent / budget) > 0.8 ? "bg-gradient-to-r from-red-500 to-pink-500" : (totalSpent / budget) > 0.5 ? "bg-gradient-to-r from-amber-500 to-orange-500" : "bg-gradient-to-r from-emerald-400 to-emerald-500"}`}
                       />
-                    </div>
-                    <div className={`mt-1 text-[10px] text-right ${isDark ? "text-white/30" : "text-gray-400"}`}>
-                      {Math.round((totalSpent / budget) * 100)}% dari budget
                     </div>
                   </div>
                 )}
@@ -193,27 +193,33 @@ export const ProfileTab = memo(function ProfileTab({ onOpenMerchant, onOpenAdmin
               )}
 
               {/* ═══════ SETTINGS ═══════ */}
-              <div className="mt-5 space-y-2">
-                <div className={`mb-2 px-1 text-xs font-bold uppercase tracking-wider ${isDark ? "text-white/30" : "text-gray-400"}`}>Pengaturan</div>
-                <Row icon={theme === "dark" ? <Moon size={16} /> : <Sun size={16} />} label={`Tema: ${theme === "dark" ? "Gelap" : "Terang"}`} sub="Tap untuk switch" onClick={toggleTheme} theme={theme} />
-                <Row icon={<Store size={16} />} label="Buka Mode Merchant" sub="Untuk pemilik warung" onClick={onOpenMerchant} theme={theme} highlight />
-                {user.name === "Admincuy" && (
-                  <Row icon={<Shield size={16} />} label="👑 Panel Admin" sub="Input Warung (Bypass User)" onClick={onOpenAdmin} theme={theme} highlight />
-                )}
+              <div className="mt-6 space-y-2">
+                <div className={`mb-3 px-2 text-[10px] font-black uppercase tracking-widest ${isDark ? "text-white/30" : "text-gray-400"}`}>Personalisasi & Sistem</div>
+                <div className={`rounded-[1.5rem] overflow-hidden ${isDark ? "bg-white/[0.02] border border-white/5" : "bg-white shadow-sm border border-gray-100"}`}>
+                  <Row icon={theme === "dark" ? <Moon size={16} /> : <Sun size={16} />} label={`Tema: ${theme === "dark" ? "Gelap" : "Terang"}`} sub="Sesuaikan mode layar" onClick={toggleTheme} theme={theme} />
+                  <div className={`h-px w-full ${isDark ? "bg-white/5" : "bg-gray-100"}`} />
+                  <Row icon={<Store size={16} />} label="Buka Mode Merchant" sub="Akses panel toko kamu" onClick={onOpenMerchant} theme={theme} highlight />
+                  {user.name === "Admincuy" && (
+                    <>
+                      <div className={`h-px w-full ${isDark ? "bg-white/5" : "bg-gray-100"}`} />
+                      <Row icon={<Shield size={16} />} label="Panel Admin" sub="Sistem bypass darurat" onClick={onOpenAdmin} theme={theme} highlight />
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* ═══════ LOGOUT ═══════ */}
               <motion.button
                 whileTap={{scale:0.97}}
                 onClick={() => setConfirmLogout(true)}
-                className={`mt-5 w-full rounded-2xl py-3.5 text-sm font-bold transition-colors ${isDark ? "bg-white/5 border border-white/10 text-red-400 hover:bg-white/10" : "bg-white text-red-500 shadow-sm hover:bg-red-50"}`}
+                className={`mt-6 w-full rounded-[1.25rem] py-4 text-sm font-bold transition-all ${isDark ? "bg-red-500/10 text-red-400 hover:bg-red-500/20" : "bg-red-50 text-red-500 hover:bg-red-100"}`}
               >
-                Keluar
+                Keluar Akun
               </motion.button>
 
               {/* ═══════ APP VERSION ═══════ */}
-              <div className={`mt-4 text-center text-[10px] pb-2 ${isDark ? "text-white/20" : "text-gray-300"}`}>
-                Nakam v2.0 · Dibuat dengan ❤️ untuk mahasiswa
+              <div className={`mt-6 text-center text-[10px] pb-4 font-semibold uppercase tracking-widest ${isDark ? "text-white/20" : "text-gray-300"}`}>
+                Nakam v2.0 · FinTech Edition
               </div>
             </div>
           </motion.div>
@@ -359,18 +365,18 @@ function StatCard({ icon, value, label, color, isDark }: { icon: React.ReactNode
 function Row({ icon, label, sub, onClick, theme, highlight }: any) {
   const isDark = theme === "dark";
   return (
-    <motion.button whileTap={{scale:0.97}} onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-2xl p-3.5 transition-colors ${
+    <motion.button whileTap={{scale:0.98}} onClick={onClick}
+      className={`flex w-full items-center gap-4 p-4 transition-all ${
         highlight
-          ? "bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] text-white shadow-md shadow-orange-500/20"
-          : isDark ? "border border-white/10 bg-white/[0.04] hover:bg-white/[0.08]" : "bg-white hover:bg-gray-50 shadow-sm"
+          ? (isDark ? "bg-gradient-to-r from-orange-500/10 to-transparent hover:bg-orange-500/20" : "bg-orange-50/50 hover:bg-orange-50")
+          : (isDark ? "bg-transparent hover:bg-white/[0.03]" : "bg-transparent hover:bg-gray-50")
       }`}>
-      <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${highlight ? "bg-white/20" : isDark ? "bg-white/10" : "bg-orange-50 text-[#FF6B1A]"}`}>{icon}</div>
+      <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${highlight ? (isDark ? "bg-orange-500/20 text-orange-400" : "bg-orange-100 text-orange-500") : isDark ? "bg-white/5 text-white/70" : "bg-gray-100 text-gray-600"}`}>{icon}</div>
       <div className="flex-1 text-left">
-        <div className="text-sm font-bold">{label}</div>
-        <div className={`text-xs ${highlight ? "text-white/70" : isDark ? "text-white/40" : "text-gray-500"}`}>{sub}</div>
+        <div className="text-sm font-extrabold">{label}</div>
+        <div className={`text-xs mt-0.5 font-medium ${highlight ? (isDark ? "text-orange-400/60" : "text-orange-500/60") : isDark ? "text-white/40" : "text-gray-500"}`}>{sub}</div>
       </div>
-      <ChevronRight size={16} className="opacity-60" />
+      <ChevronRight size={18} className="opacity-40" />
     </motion.button>
   );
 }
