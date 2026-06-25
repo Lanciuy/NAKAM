@@ -70,8 +70,10 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
   const avgDailySpend = Math.floor(monthlySpent / passedDays);
   
   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  const daysLeft = Math.max(1, lastDayOfMonth.getDate() - today.getDate() + 1);
-  const dailyLimit = Math.floor(remaining / daysLeft);
+  const totalDaysInMonth = lastDayOfMonth.getDate();
+  const idealDailyLimit = Math.floor(budget / totalDaysInMonth);
+  const daysLeft = Math.max(1, totalDaysInMonth - today.getDate() + 1);
+  const safeDailyLimit = Math.floor(remaining / daysLeft);
 
   const categories = useMemo(() => {
     const map = new Map<string, number>();
@@ -146,9 +148,12 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
             <motion.div variants={itemAnim} className="grid grid-cols-2 gap-3 mt-12">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute -right-2 -top-2 p-3 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500"><Calendar size={56} /></div>
-                <div className="text-xs text-white/60 relative z-10">Jatah Harian</div>
-                <div className="mt-1 text-lg text-emerald-400 relative z-10" style={{fontWeight:800}}>{hideBalance ? "Rp ••••" : fmtRp(dailyLimit)}</div>
-                <div className="text-[10px] text-white/40 mt-1 relative z-10">Sisa {daysLeft} hari lagi</div>
+                <div className="text-xs text-white/60 relative z-10">Jatah Harian (Ideal)</div>
+                <div className="mt-1 text-lg text-emerald-400 relative z-10" style={{fontWeight:800}}>{hideBalance ? "Rp ••••" : fmtRp(idealDailyLimit)}</div>
+                <div className="text-[10px] text-white/40 mt-1.5 relative z-10 flex flex-col gap-0.5">
+                  <span>Batas aman: {hideBalance ? "Rp ••••" : fmtRp(safeDailyLimit)}/hari</span>
+                  <span>(Sisa {daysLeft} hari)</span>
+                </div>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute -right-2 -top-2 p-3 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500"><Target size={56} /></div>
