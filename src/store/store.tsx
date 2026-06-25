@@ -38,6 +38,15 @@ export type FlashPromo = {
   endTime: string;
 };
 
+export type AppNotification = {
+  id: string;
+  type: "broadcast" | "flash_promo" | "system";
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+};
+
 export type MerchantOrder = {
   id: string;
   item: string;
@@ -83,6 +92,10 @@ type Store = {
   transactions: Transaction[];
   hideBalance: boolean;
   toggleHideBalance: () => void;
+  // Notifications
+  notifications: AppNotification[];
+  addNotification: (n: Omit<AppNotification, "id" | "read" | "time">) => void;
+  markNotificationsAsRead: () => void;
   // Campus
   campus: string;
   setCampus: (c: string) => void;
@@ -150,6 +163,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   });
   const [hideBalance, setHide] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    const saved = localStorage.getItem("appNotifications");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // ─── Campus & Settings ───
   const [campus, setCampusState] = useState(() => localStorage.getItem("campus") || "UMM");
@@ -213,9 +230,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(userKey(uname, "hideBalance"), JSON.stringify(hideBalance));
     localStorage.setItem(userKey(uname, "campus"), JSON.stringify(campus));
     localStorage.setItem(userKey(uname, "transactions"), JSON.stringify(transactions));
+    localStorage.setItem("appNotifications", JSON.stringify(notifications));
     localStorage.setItem("userProfile_" + uname, JSON.stringify(user));
     localStorage.setItem("lastLoggedInUser", uname);
-  }, [theme, budget, globalPromo, flashPromos, hideBalance, campus, transactions, user]);
+  }, [theme, budget, globalPromo, flashPromos, hideBalance, campus, transactions, user, notifications]);
 
   // ─── Auth: Listen for session changes ───
   useEffect(() => {
@@ -405,13 +423,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   // ─── Promo ───
+  const addNotification: (n: Omit<AppNotification, "id" | "time" | "read">) => void = (n) => {
+    setNotifications(prev => [
+      {
+        ...n,
+        id: Date.now().toString(),
+        time: new Date().toISOString(),
+        read: false
+      },
+      ...prev
+    ]);
+  };
+
+  const markNotificationsAsRead = () => {
+    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
+  };
+
   const setGlobalPromo = (v: string) => {
     setGlobalPromoState(v);
+    if (v) {
+      addNotification({
+        type: "broadcast",
+        title: "📢 Broadcast Spesial!",
+        message: v
+      });
+    }
   };
 
   const addFlashPromo = (p: Omit<FlashPromo, "id">) => {
     const promo = { ...p, id: "fp" + Date.now() + Math.random().toString(36).substring(2, 9) };
     setFlashPromos((prev) => [promo, ...prev]);
+
+    addNotification({
+      type: "flash_promo",
+      title: `⚡ Promo dari ${p.merchantName}`,
+      message: `Diskon spesial untuk ${p.menuName} sedang berlangsung! Cepat sikat sebelum kehabisan!`
+    });
 
     if ("Notification" in window) {
       const showNotif = () => {
@@ -603,6 +650,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         transactions,
         hideBalance,
         toggleHideBalance: () => setHide((h) => !h),
+        notifications,
+        addNotification,
+        markNotificationsAsRead,
         campus,
         setCampus,
         ghostMode,

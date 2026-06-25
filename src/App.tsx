@@ -10,6 +10,7 @@ import { MerchantDashboard } from "@/pages/MerchantDashboard";
 import { WalletScreen } from "@/components/Wallet";
 import { AdminPanel } from "@/pages/AdminPanel";
 import { BottomNavBar } from "@/components/BottomNavBar";
+import { NotificationsModal } from "@/components/NotificationsModal";
 import { StoreProvider, useStore } from "@/store/store";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
@@ -24,6 +25,7 @@ function Inner() {
   const [walletOpen, setWalletOpen] = useState(false);
   const [merchantOpen, setMerchantOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { theme, supabaseUser, logout } = useStore();
 
   const handleOpenWallet = useCallback(() => setWalletOpen(true), []);
@@ -40,6 +42,7 @@ function Inner() {
     setWalletOpen(false);
     setMerchantOpen(false);
     setAdminOpen(false);
+    setNotificationsOpen(false);
     setPhase("login");
     setActiveTab("home");
   }, [logout]);
@@ -73,6 +76,7 @@ function Inner() {
                     <motion.div key="home" className="absolute inset-0 overflow-y-auto no-scrollbar" initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}}>
                       <HomeTab 
                         onOpenWallet={handleOpenWallet}
+                        onOpenNotifications={() => setNotificationsOpen(true)}
                         onSeeAllRestaurants={() => setActiveTab("restaurants")}
                         onNavigateToEatery={(eatery) => {
                           setRouteTarget(eatery);
@@ -119,6 +123,9 @@ function Inner() {
         </AnimatePresence>
         <AnimatePresence>
           {adminOpen && <AdminPanel key="admin" onBack={handleCloseAdmin} />}
+        </AnimatePresence>
+        <AnimatePresence>
+          {notificationsOpen && <NotificationsModal key="notifications" onClose={() => setNotificationsOpen(false)} />}
         </AnimatePresence>
       </div>
     </div>

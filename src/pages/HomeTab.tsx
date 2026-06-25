@@ -86,10 +86,12 @@ function getMealSuggestion(): string {
   return "🦉 Ngemil malam-malam nih?";
 }
 
-export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery, onSeeAllRestaurants }: { onOpenWallet: () => void; onNavigateToEatery?: (eatery: any) => void; onSeeAllRestaurants?: () => void }) {
-  const { user, budget, spent, campus, flashPromos, merchant, transactions } = useStore();
+export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery, onSeeAllRestaurants, onOpenNotifications }: { onOpenWallet: () => void; onNavigateToEatery?: (eatery: any) => void; onSeeAllRestaurants?: () => void; onOpenNotifications?: () => void }) {
+  const { user, budget, spent, campus, flashPromos, merchant, transactions, notifications } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const unreadNotifications = notifications.filter((n) => !n.read).length;
   const [now, setNow] = useState(Date.now());
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isTerserahOpen, setIsTerserahOpen] = useState(false);
@@ -247,10 +249,10 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery,
           <div className="px-2.5 py-1 rounded-full bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 text-[10px] font-bold text-[#FF6B1A] flex items-center gap-1">
             <MapPin size={10} /> {campus}
           </div>
-          <button onClick={() => console.log("Notifikasi dibuka")} className="relative w-10 h-10 bg-white dark:bg-white/10 rounded-full flex items-center justify-center shadow-sm text-gray-700 dark:text-white border border-gray-100 dark:border-white/10 active:scale-95 transition-transform">
+          <button onClick={onOpenNotifications} className="relative w-10 h-10 bg-white dark:bg-white/10 rounded-full flex items-center justify-center shadow-sm text-gray-700 dark:text-white border border-gray-100 dark:border-white/10 active:scale-95 transition-transform">
             <Bell size={20} />
-            {activeFlashPromos.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">{activeFlashPromos.length}</span>
+            {unreadNotifications > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">{unreadNotifications}</span>
             )}
           </button>
         </div>
