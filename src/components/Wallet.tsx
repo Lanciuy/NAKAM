@@ -24,7 +24,7 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(budget));
   const [tx, setTx] = useState<Transaction | null>(null);
-  
+
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll({ container: scrollerRef });
   const stickyOpacity = useTransform(scrollY, [120, 200], [0, 1]);
@@ -35,14 +35,14 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
-    
+
     const base = [
       { id: "w1", name: "Minggu 1", val: 0 },
       { id: "w2", name: "Minggu 2", val: 0 },
       { id: "w3", name: "Minggu 3", val: 0 },
       { id: "w4", name: "Minggu 4", val: 0 },
     ];
-    
+
     let mSpent = 0;
 
     transactions.forEach(t => {
@@ -56,7 +56,7 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
         else base[3].val += t.amount;
       }
     });
-    
+
     return { monthlySpent: mSpent, chartData: base };
   }, [transactions]);
 
@@ -68,7 +68,7 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
   const today = new Date();
   const passedDays = Math.max(1, today.getDate());
   const avgDailySpend = Math.floor(monthlySpent / passedDays);
-  
+
   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
   const totalDaysInMonth = lastDayOfMonth.getDate();
   const idealDailyLimit = Math.floor(budget / totalDaysInMonth);
@@ -83,7 +83,7 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
         map.set(t.emoji || '🍽️', (map.get(t.emoji || '🍽️') || 0) + t.amount);
       }
     });
-    return Array.from(map.entries()).sort((a,b) => b[1] - a[1]).slice(0, 4);
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]).slice(0, 4);
   }, [transactions]);
 
   return (
@@ -100,7 +100,7 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
           <button className="rounded-full bg-white/10 p-1.5" onClick={onBack}><ArrowLeft size={14} /></button>
           <div className="flex-1">
             <div className="text-[10px] text-white/50">Sisa Saldo</div>
-            <div className="text-sm tracking-tight" style={{fontWeight:800}}>
+            <div className="text-sm tracking-tight" style={{ fontWeight: 800 }}>
               {hideBalance ? "Rp ••••" : fmtRp(remaining)}
             </div>
           </div>
@@ -110,17 +110,17 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
           <div className="sticky top-0 z-10 flex justify-center bg-red-500 py-2">
             <div className="flex items-center gap-2 text-xs">
               <AlertTriangle size={14} />
-              <span style={{fontWeight:700}}>Awas dompet tipis, hemat bro!</span>
+              <span style={{ fontWeight: 700 }}>Awas dompet tipis, hemat bro!</span>
             </div>
           </div>
         )}
 
         <div className="px-5 pt-12">
           <div className="flex items-center gap-3">
-            <motion.button whileTap={{scale:0.9}} onClick={onBack} className="rounded-full bg-white/10 p-2"><ArrowLeft size={18} /></motion.button>
+            <motion.button whileTap={{ scale: 0.9 }} onClick={onBack} className="rounded-full bg-white/10 p-2"><ArrowLeft size={18} /></motion.button>
             <div className="flex-1">
               <div className="text-xs text-white/60">Advanced Analytics</div>
-              <h1 className="text-xl tracking-tight" style={{fontWeight:800}}>Monitoring Budget</h1>
+              <h1 className="text-xl tracking-tight" style={{ fontWeight: 800 }}>Monitoring Budget</h1>
             </div>
             <button onClick={toggleHideBalance} className="rounded-full bg-white/10 p-2">
               {hideBalance ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -128,14 +128,14 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
           </div>
 
           <motion.div variants={staggerContainer} initial="hidden" animate="show" className="mt-8 space-y-6">
-            
+
             {/* Glowing Gauge */}
             <motion.div variants={itemAnim} className="flex flex-col items-center relative">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-[#FF6B1A]/20 blur-3xl rounded-full" />
               <Gauge pct={pct} danger={danger} />
               <div className="-mt-36 text-center z-10">
                 <div className="text-xs text-white/60 uppercase tracking-widest">Sisa Saldo</div>
-                <div className="mt-1 text-4xl tracking-tighter" style={{fontWeight:800}}>
+                <div className="mt-1 text-4xl tracking-tighter" style={{ fontWeight: 800 }}>
                   {hideBalance ? "Rp ••••••" : fmtRp(remaining)}
                 </div>
                 <div className="mt-1 flex items-center justify-center gap-1.5 text-xs text-emerald-400 bg-emerald-400/10 rounded-full px-3 py-1 w-max mx-auto border border-emerald-400/20">
@@ -149,7 +149,7 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute -right-2 -top-2 p-3 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500"><Calendar size={56} /></div>
                 <div className="text-xs text-white/60 relative z-10">Jatah Harian (Ideal)</div>
-                <div className="mt-1 text-lg text-emerald-400 relative z-10" style={{fontWeight:800}}>{hideBalance ? "Rp ••••" : fmtRp(idealDailyLimit)}</div>
+                <div className="mt-1 text-lg text-emerald-400 relative z-10" style={{ fontWeight: 800 }}>{hideBalance ? "Rp ••••" : fmtRp(idealDailyLimit)}</div>
                 <div className="text-[10px] text-white/40 mt-1.5 relative z-10 flex flex-col gap-0.5">
                   <span>Batas aman: {hideBalance ? "Rp ••••" : fmtRp(safeDailyLimit)}/hari</span>
                   <span>(Sisa {daysLeft} hari)</span>
@@ -158,15 +158,15 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute -right-2 -top-2 p-3 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500"><Target size={56} /></div>
                 <div className="text-xs text-white/60 relative z-10">Target Bulanan</div>
-                <div className="mt-1 text-lg text-[#FF8C42] relative z-10" style={{fontWeight:800}}>{hideBalance ? "Rp ••••" : fmtRp(budget)}</div>
-                <button onClick={() => { setDraft(String(budget)); setEditing(true); }} className="text-[10px] text-[#FF6B1A] mt-1 flex items-center gap-1 relative z-10 hover:text-white transition-colors"><Edit3 size={10}/> Edit Target</button>
+                <div className="mt-1 text-lg text-[#FF8C42] relative z-10" style={{ fontWeight: 800 }}>{hideBalance ? "Rp ••••" : fmtRp(budget)}</div>
+                <button onClick={() => { setDraft(String(budget)); setEditing(true); }} className="text-[10px] text-[#FF6B1A] mt-1 flex items-center gap-1 relative z-10 hover:text-white transition-colors"><Edit3 size={10} /> Edit Target</button>
               </div>
               <div className="col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute -right-4 top-1/2 -translate-y-1/2 p-3 opacity-5 group-hover:scale-110 transition-all duration-500"><TrendingDown size={80} /></div>
                 <div className="flex justify-between items-center relative z-10">
                   <div>
                     <div className="text-xs text-white/60">Rata-rata Pengeluaran Harian</div>
-                    <div className="mt-1 text-base text-white/90" style={{fontWeight:700}}>{hideBalance ? "Rp ••••" : fmtRp(avgDailySpend)}</div>
+                    <div className="mt-1 text-base text-white/90" style={{ fontWeight: 700 }}>{hideBalance ? "Rp ••••" : fmtRp(avgDailySpend)}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-[10px] text-white/40">Selama {passedDays} hari</div>
@@ -178,7 +178,7 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
             {/* Categories Breakdown */}
             {categories.length > 0 && (
               <motion.div variants={itemAnim} className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-                <h3 className="mb-4 text-sm flex items-center gap-2" style={{fontWeight:700}}><Wallet size={16} className="text-[#FF6B1A]"/> Pengeluaran Terbesar Bulan Ini</h3>
+                <h3 className="mb-4 text-sm flex items-center gap-2" style={{ fontWeight: 700 }}><Wallet size={16} className="text-[#FF6B1A]" /> Pengeluaran Terbesar Bulan Ini</h3>
                 <div className="space-y-4">
                   {categories.map(([emo, amount]) => {
                     const w = Math.max(5, (amount / monthlySpent) * 100);
@@ -186,7 +186,7 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
                       <div key={emo} className="group cursor-default">
                         <div className="flex justify-between text-xs mb-1.5">
                           <span className="flex items-center gap-2 text-white/80 group-hover:text-white transition-colors"><span className="text-sm bg-white/10 p-1 rounded-lg">{emo}</span> Kategori {emo}</span>
-                          <span style={{fontWeight:700}} className="text-white/90 group-hover:text-white">{hideBalance ? "Rp ••••" : fmtRp(amount)}</span>
+                          <span style={{ fontWeight: 700 }} className="text-white/90 group-hover:text-white">{hideBalance ? "Rp ••••" : fmtRp(amount)}</span>
                         </div>
                         <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden">
                           <motion.div initial={{ width: 0 }} whileInView={{ width: `${w}%` }} viewport={{ once: true }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }} className="h-full bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42]" />
@@ -204,9 +204,9 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <div>
                   <div className="text-xs text-white/60">Total Pengeluaran Bulan Ini</div>
-                  <div className="text-xl" style={{fontWeight:800}}>{hideBalance ? "Rp ••••" : fmtRp(monthlySpent)}</div>
+                  <div className="text-xl" style={{ fontWeight: 800 }}>{hideBalance ? "Rp ••••" : fmtRp(monthlySpent)}</div>
                 </div>
-                <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-[#FF6B1A]"><TrendingDown size={18}/></div>
+                <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-[#FF6B1A]"><TrendingDown size={18} /></div>
               </div>
               <div className="h-40 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -230,7 +230,7 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
 
             {/* Transactions */}
             <motion.div variants={itemAnim}>
-              <h3 className="mb-3 text-sm px-1" style={{fontWeight:700}}>Riwayat 20 Terakhir</h3>
+              <h3 className="mb-3 text-sm px-1" style={{ fontWeight: 700 }}>Riwayat 30 Terakhir</h3>
               <div className="space-y-2">
                 {transactions.map((t, i) => (
                   <motion.button
@@ -239,16 +239,16 @@ export const WalletScreen = memo(function WalletScreen({ onBack }: { onBack: () 
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ root: scrollerRef, once: true, margin: "0px 0px -40px 0px" }}
                     transition={{ ...spring, delay: i * 0.04 }}
-                    whileTap={{scale:0.97}}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => setTx(t)}
                     className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3.5 text-left backdrop-blur-xl hover:bg-white/10 transition-colors"
                   >
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl">{t.emoji}</div>
                     <div className="flex-1">
-                      <div className="text-sm" style={{fontWeight:700}}>{t.place}</div>
+                      <div className="text-sm" style={{ fontWeight: 700 }}>{t.place}</div>
                       <div className="text-xs text-white/50 mt-0.5">{t.date}</div>
                     </div>
-                    <div className="text-sm text-[#FF8C42]" style={{fontWeight:800}}>
+                    <div className="text-sm text-[#FF8C42]" style={{ fontWeight: 800 }}>
                       -{hideBalance ? "••••" : fmtRp(t.amount)}
                     </div>
                   </motion.button>
@@ -309,26 +309,26 @@ function BudgetEditor({ value, setValue, onCancel, onSave }: any) {
     else setValue(value + k);
   };
   return (
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 z-[60] flex items-end justify-center bg-black/60 backdrop-blur-sm">
-      <motion.div initial={{y:400}} animate={{y:0}} exit={{y:400}} transition={spring} className="w-full md:max-w-md rounded-t-3xl bg-white p-6 text-gray-900 shadow-2xl">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-[60] flex items-end justify-center bg-black/60 backdrop-blur-sm">
+      <motion.div initial={{ y: 400 }} animate={{ y: 0 }} exit={{ y: 400 }} transition={spring} className="w-full md:max-w-md rounded-t-3xl bg-white p-6 text-gray-900 shadow-2xl">
         <div className="mb-1 flex items-center justify-between">
-          <h3 className="text-xl tracking-tight" style={{fontWeight:800}}>Edit Target Bulanan</h3>
+          <h3 className="text-xl tracking-tight" style={{ fontWeight: 800 }}>Edit Target Bulanan</h3>
           <button onClick={onCancel} className="rounded-full bg-gray-100 p-1.5 hover:bg-gray-200"><X size={16} /></button>
         </div>
         <div className="mt-4 rounded-3xl bg-gradient-to-br from-orange-50 to-orange-100/50 p-6 border border-orange-100">
           <div className="text-xs text-orange-600/60 font-bold uppercase tracking-wider">Target Baru</div>
-          <div className="mt-1 text-3xl tracking-tighter text-orange-600" style={{fontWeight:800}}>
+          <div className="mt-1 text-3xl tracking-tighter text-orange-600" style={{ fontWeight: 800 }}>
             Rp {(parseInt(value) || 0).toLocaleString("id-ID")}
           </div>
         </div>
         <div className="mt-4 grid grid-cols-3 gap-2">
-          {["1","2","3","4","5","6","7","8","9","000","0","del"].map((k) => (
-            <motion.button key={k} whileTap={{scale:0.9}} onClick={() => press(k)} className="rounded-2xl bg-gray-50 hover:bg-gray-100 py-4 text-xl" style={{fontWeight:700}}>
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9", "000", "0", "del"].map((k) => (
+            <motion.button key={k} whileTap={{ scale: 0.9 }} onClick={() => press(k)} className="rounded-2xl bg-gray-50 hover:bg-gray-100 py-4 text-xl" style={{ fontWeight: 700 }}>
               {k === "del" ? <Delete size={20} className="mx-auto text-gray-500" /> : k}
             </motion.button>
           ))}
         </div>
-        <motion.button whileTap={{scale:0.97}} onClick={onSave} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] py-4 text-white shadow-lg shadow-orange-500/20" style={{fontWeight:800}}>
+        <motion.button whileTap={{ scale: 0.97 }} onClick={onSave} className="mt-4 w-full rounded-2xl bg-gradient-to-r from-[#FF6B1A] to-[#FF8C42] py-4 text-white shadow-lg shadow-orange-500/20" style={{ fontWeight: 800 }}>
           Simpan Target
         </motion.button>
       </motion.div>
@@ -338,9 +338,9 @@ function BudgetEditor({ value, setValue, onCancel, onSave }: any) {
 
 function TxDetail({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
   return (
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={onClose} className="absolute inset-0 z-[60] flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 z-[60] flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm">
       <motion.div
-        initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} transition={spring}
+        initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={spring}
         onClick={(e) => e.stopPropagation()}
         className="w-full md:max-w-sm overflow-hidden rounded-3xl bg-white text-gray-900 shadow-2xl"
         style={{ maskImage: "radial-gradient(circle at 0 50%, transparent 8px, black 8px), radial-gradient(circle at 100% 50%, transparent 8px, black 8px)" }}
@@ -351,7 +351,7 @@ function TxDetail({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
             <span className="text-4xl drop-shadow-md">{tx.emoji}</span>
             <button onClick={onClose} className="rounded-full bg-white/20 p-2 hover:bg-white/30 backdrop-blur-md"><X size={16} /></button>
           </div>
-          <h3 className="mt-4 text-3xl tracking-tight relative z-10" style={{fontWeight:800}}>{tx.place}</h3>
+          <h3 className="mt-4 text-3xl tracking-tight relative z-10" style={{ fontWeight: 800 }}>{tx.place}</h3>
           <div className="text-sm opacity-90 relative z-10 font-medium">{tx.date}</div>
         </div>
         <div className="border-b-2 border-dashed border-gray-200 relative">
@@ -364,16 +364,16 @@ function TxDetail({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
             {tx.items.map((it, idx) => (
               <li key={`${it}-${idx}`} className="flex justify-between text-sm font-medium">
                 <span>{it}</span>
-                <span className="text-emerald-500 bg-emerald-50 p-1 rounded-full"><Check size={12}/></span>
+                <span className="text-emerald-500 bg-emerald-50 p-1 rounded-full"><Check size={12} /></span>
               </li>
             ))}
           </ul>
           <div className="my-5 border-t border-dashed border-gray-200" />
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500" style={{fontWeight:700}}>Total Bayar</span>
-            <span className="text-2xl tracking-tighter text-[#FF6B1A]" style={{fontWeight:800}}>{fmtRp(tx.amount)}</span>
+            <span className="text-sm text-gray-500" style={{ fontWeight: 700 }}>Total Bayar</span>
+            <span className="text-2xl tracking-tighter text-[#FF6B1A]" style={{ fontWeight: 800 }}>{fmtRp(tx.amount)}</span>
           </div>
-          <button className="mt-6 w-full rounded-2xl border border-gray-200 bg-gray-50 py-3.5 text-xs text-gray-600 hover:bg-gray-100 transition-colors" style={{fontWeight:700}}>
+          <button className="mt-6 w-full rounded-2xl border border-gray-200 bg-gray-50 py-3.5 text-xs text-gray-600 hover:bg-gray-100 transition-colors" style={{ fontWeight: 700 }}>
             Laporkan / Edit Transaksi
           </button>
         </div>
@@ -382,6 +382,6 @@ function TxDetail({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
   );
 }
 
-function Check({size}: {size: number}) {
+function Check({ size }: { size: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>;
 }
