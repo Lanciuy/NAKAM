@@ -26,7 +26,7 @@ export function BottomNavBar({ activeTab, onChange }: BottomNavBarProps) {
             <button
               key={tab.id}
               onClick={() => onChange(tab.id)}
-              className="relative flex flex-col items-center justify-center w-16 h-full gap-1"
+              className="relative flex flex-1 flex-col items-center justify-center h-full min-h-[56px] gap-1 active:scale-95 transition-transform"
             >
               <div className="relative">
                 <Icon

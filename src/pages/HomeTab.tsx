@@ -327,7 +327,7 @@ export const HomeTab = memo(function HomeTab({ onOpenWallet, onNavigateToEatery 
               </div>
               <div className="text-left">
                 <div className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Sisa Budget Bulanan</div>
-                <div className="font-bold text-gray-900 text-lg tracking-tight">{fmtRp(remaining)}</div>
+                <div className="font-bold text-gray-900 dark:text-white text-lg tracking-tight">{fmtRp(remaining)}</div>
               </div>
             </div>
             <div className="flex flex-col items-end">
