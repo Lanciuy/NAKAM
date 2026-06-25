@@ -93,6 +93,17 @@ export async function fetchAllEateriesForAdmin(): Promise<any[] | null> {
   }
 }
 
+export async function adminFetchEateryMenus(eateryId: string): Promise<any[]> {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase.from("eatery_menu").select("*").eq("eatery_id", eateryId);
+    if (error || !data) return [];
+    return data;
+  } catch {
+    return [];
+  }
+}
+
 export async function deleteEateryByAdmin(id: string): Promise<void> {
   if (!supabase || !id) return;
   try {
@@ -117,6 +128,7 @@ export async function adminAddEatery(
       gallery: data.image ? [data.image] : [],
       dominance: 80,
       walk_time: "5 mnt",
+      emoji: data.emoji,
     }).select("id").single();
     
     if (error) return {success: false, error: error.message};
@@ -125,6 +137,46 @@ export async function adminAddEatery(
     if (data.menus && data.menus.length > 0) {
       const menuRows = data.menus.map(m => ({
         eatery_id: result.id,
+        name: m.name,
+        price: m.price,
+        emoji: m.emoji,
+      }));
+      await supabase.from("eatery_menu").insert(menuRows);
+    }
+
+    return {success: true};
+  } catch (err: any) {
+    return {success: false, error: err.message || "Unknown error"};
+  }
+}
+
+export async function adminUpdateEatery(
+  id: string,
+  data: { name: string; campus: string; emoji: string; price: string; lat: number; lng: number; image?: string; filters: string[]; menus?: {name: string; price: number; emoji: string}[] }
+): Promise<{success: boolean, error?: string}> {
+  if (!supabase) return {success: false, error: "Supabase tidak terkonfigurasi."};
+  try {
+    const updatePayload: any = {
+      name: data.name,
+      campus: data.campus,
+      price_range: data.price,
+      lat: data.lat,
+      lng: data.lng,
+      filters: data.filters,
+      emoji: data.emoji,
+    };
+    if (data.image) {
+      updatePayload.image = data.image;
+      updatePayload.gallery = [data.image];
+    }
+    
+    const { error } = await supabase.from("eateries").update(updatePayload).eq("id", id);
+    if (error) return {success: false, error: error.message};
+
+    await supabase.from("eatery_menu").delete().eq("eatery_id", id);
+    if (data.menus && data.menus.length > 0) {
+      const menuRows = data.menus.map(m => ({
+        eatery_id: id,
         name: m.name,
         price: m.price,
         emoji: m.emoji,

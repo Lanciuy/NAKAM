@@ -1,10 +1,10 @@
 import { useState, useEffect, memo, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowLeft, Check, Store, Image as ImageIcon, Loader2, LayoutDashboard, Database, PlusCircle, Megaphone, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, Store, Image as ImageIcon, Loader2, LayoutDashboard, Database, PlusCircle, Megaphone, Trash2, Pencil } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { adminAddEatery, fetchAllEateriesForAdmin, deleteEateryByAdmin, uploadImageToSupabase } from "@/services/supabaseData";
+import { adminAddEatery, fetchAllEateriesForAdmin, deleteEateryByAdmin, uploadImageToSupabase, adminUpdateEatery, adminFetchEateryMenus } from "@/services/supabaseData";
 import { useStore } from "@/store/store";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
@@ -26,7 +26,8 @@ const createMarkerIcon = (emoji: string) => L.divIcon({
 });
 
 export const AdminPanel = memo(function AdminPanel({ onBack }: { onBack: () => void }) {
-  const [activeTab, setActiveTab] = useState<"overview" | "data" | "add" | "promo">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "data" | "add" | "promo" | "edit">("overview");
+  const [editingEatery, setEditingEatery] = useState<any>(null);
 
   return (
     <motion.div
@@ -48,14 +49,16 @@ export const AdminPanel = memo(function AdminPanel({ onBack }: { onBack: () => v
         <TabButton id="overview" active={activeTab} setActive={setActiveTab} icon={<LayoutDashboard size={16}/>} label="Overview" />
         <TabButton id="data" active={activeTab} setActive={setActiveTab} icon={<Database size={16}/>} label="Data Mitra" />
         <TabButton id="add" active={activeTab} setActive={setActiveTab} icon={<PlusCircle size={16}/>} label="Tambah" />
+        {activeTab === "edit" && <TabButton id="edit" active={activeTab} setActive={setActiveTab} icon={<Pencil size={16}/>} label="Edit" />}
         <TabButton id="promo" active={activeTab} setActive={setActiveTab} icon={<Megaphone size={16}/>} label="Promo" />
       </div>
 
       <div className="flex-1 overflow-y-auto relative bg-[#f8f9fa]">
         <AnimatePresence mode="wait">
           {activeTab === "overview" && <TabOverview key="overview" />}
-          {activeTab === "data" && <TabData key="data" />}
+          {activeTab === "data" && <TabData key="data" onEdit={(eatery) => { setEditingEatery(eatery); setActiveTab("edit"); }} />}
           {activeTab === "add" && <TabAdd key="add" />}
+          {activeTab === "edit" && <TabEdit key="edit" initialData={editingEatery} onDone={() => setActiveTab("data")} />}
           {activeTab === "promo" && <TabPromo key="promo" />}
         </AnimatePresence>
       </div>
@@ -139,7 +142,7 @@ function CampusStatBar({ label, count, max, color }: any) {
   );
 }
 
-function TabData() {
+function TabData({ onEdit }: { onEdit: (eatery: any) => void }) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -180,9 +183,14 @@ function TabData() {
                 <div className="text-sm text-gray-900 leading-tight" style={{fontWeight:800}}>{e.name}</div>
                 <div className="text-xs text-gray-500 font-medium">{e.campus} • {e.price_range}</div>
               </div>
-              <button onClick={() => handleDelete(e.id)} className="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-full transition-colors">
-                <Trash2 size={16} />
-              </button>
+              <div className="flex gap-2">
+                <button onClick={() => onEdit(e)} className="p-2 text-blue-500 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors">
+                  <Pencil size={16} />
+                </button>
+                <button onClick={() => handleDelete(e.id)} className="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-full transition-colors">
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -386,6 +394,213 @@ function TabAdd() {
         }`}
       >
         {loading ? <><Loader2 size={18} className="animate-spin" /> Menyimpan...</> : success ? <><Check size={18} /> Tersimpan!</> : <><Store size={18} /> Daftarkan Warung Publik</>}
+      </motion.button>
+    </motion.div>
+  );
+}
+
+function TabEdit({ initialData, onDone }: { initialData: any, onDone: () => void }) {
+  const [name, setName] = useState(initialData?.name || "");
+  const [emoji, setEmoji] = useState(initialData?.emoji || "🍜");
+  const [campus, setCampus] = useState(initialData?.campus || "UMM");
+  const [price, setPrice] = useState(initialData?.price_range || "10k - 25k");
+  const [lat, setLat] = useState(initialData?.lat || -7.9213);
+  const [lng, setLng] = useState(initialData?.lng || 112.5990);
+  const [selectedFilters, setSelectedFilters] = useState<string[]>(initialData?.filters || []);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null);
+  const [menus, setMenus] = useState<{name: string; price: number; emoji: string}[]>([]);
+  const [newMenuName, setNewMenuName] = useState("");
+  const [newMenuPrice, setNewMenuPrice] = useState("");
+  const [newMenuEmoji, setNewMenuEmoji] = useState("🍽️");
+  const MENU_EMOJIS = ["🍽️", "🍜", "🍚", "🍲", "🍗", "🥩", "🍔", "🍕", "🌭", "🥪", "🌮", "🌯", "🥗", "🍨", "🍩", "🍰", "☕", "🧋", "🍹", "🥤"];
+  
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (initialData?.id) {
+      adminFetchEateryMenus(initialData.id).then(res => {
+        if (res) setMenus(res.map((m: any) => ({ name: m.name, price: m.price, emoji: m.emoji || "🍽️" })));
+      });
+    }
+  }, [initialData]);
+
+  const handleAddMenu = () => {
+    if (!newMenuName || !newMenuPrice) return;
+    setMenus([...menus, { name: newMenuName, price: parseInt(newMenuPrice.replace(/\D/g, "") || "0"), emoji: newMenuEmoji }]);
+    setNewMenuName("");
+    setNewMenuPrice("");
+    setNewMenuEmoji("🍽️");
+  };
+
+  const handleRemoveMenu = (index: number) => {
+    setMenus(menus.filter((_, i) => i !== index));
+  };
+
+  function LocationMarker() {
+    useMapEvents({ click(e) { setLat(e.latlng.lat); setLng(e.latlng.lng); } });
+    return <Marker position={[lat, lng]} icon={createMarkerIcon(emoji)} />;
+  }
+
+  function MapUpdater({ center }: { center: [number, number] }) {
+    const map = useMap();
+    map.flyTo(center, map.getZoom());
+    return null;
+  }
+
+  const toggleFilter = (f: string) => {
+    setSelectedFilters(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
+  };
+
+  const handleSave = async () => {
+    if (!name || name.length < 3) return;
+    setLoading(true);
+    let imageUrl = initialData?.image || "";
+    if (imageFile) {
+      const url = await uploadImageToSupabase(imageFile);
+      if (url) imageUrl = url;
+    }
+    const res = await adminUpdateEatery(initialData.id, { name, campus, emoji, price, lat, lng, image: imageUrl, filters: selectedFilters, menus });
+    setLoading(false);
+    if (res.success) {
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        onDone();
+      }, 1500);
+    } else {
+      alert("Gagal mengupdate database: " + res.error);
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-5 pb-24 space-y-6">
+      <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-sm font-bold text-blue-600">Edit Identitas Toko</h2>
+          <button onClick={onDone} className="text-xs text-gray-500 hover:text-gray-900">Batal</button>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex flex-col gap-1.5 w-1/3">
+            <label className="text-xs text-gray-500 font-bold">Ikon</label>
+            <select value={emoji} onChange={(e) => setEmoji(e.target.value)} className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-xl outline-none">
+              {EMOJI_PRESET.map((e) => <option key={e} value={e}>{e}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5 w-2/3">
+            <label className="text-xs text-gray-500 font-bold">Nama Warung</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Misal: Warkop Pak Man" className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3.5 text-sm outline-none font-bold text-gray-900" />
+          </div>
+        </div>
+        
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs text-gray-500 font-bold">Gambar Cover (Opsional)</label>
+          <div className="relative overflow-hidden rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 p-4 text-center">
+            {imagePreview ? (
+              <div className="relative">
+                <img src={imagePreview} alt="Preview" className="h-32 w-full object-cover rounded-lg" />
+                <button onClick={() => { setImageFile(null); setImagePreview(null); }} className="absolute top-2 right-2 rounded-full bg-white p-1.5 shadow">
+                  <Check className="text-green-500" size={16} />
+                </button>
+              </div>
+            ) : (
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-2 py-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <ImageIcon size={24} />
+                <span className="text-xs font-bold">Ubah File dari Galeri</span>
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setImageFile(e.target.files[0]);
+                    setImagePreview(URL.createObjectURL(e.target.files[0]));
+                  }
+                }} />
+              </label>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs text-gray-500 font-bold">Range Harga</label>
+          <input value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Misal: 10k - 25k" className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none font-bold text-gray-900" />
+        </div>
+      </div>
+
+      <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+        <h2 className="text-sm font-bold text-blue-600">Menu & Harga</h2>
+        <div className="space-y-3">
+          {menus.map((m, i) => (
+            <div key={i} className="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="text-xl">{m.emoji}</div>
+                <div>
+                  <div className="text-sm font-bold text-gray-900">{m.name}</div>
+                  <div className="text-xs font-bold text-blue-600">Rp {m.price.toLocaleString("id-ID")}</div>
+                </div>
+              </div>
+              <button onClick={() => handleRemoveMenu(i)} className="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-full transition-colors">
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+          
+          <div className="flex flex-col gap-3 p-4 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+            <div className="flex gap-2">
+              <select value={newMenuEmoji} onChange={(e) => setNewMenuEmoji(e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-lg outline-none w-1/4">
+                {MENU_EMOJIS.map((e) => <option key={e} value={e}>{e}</option>)}
+              </select>
+              <input value={newMenuName} onChange={(e) => setNewMenuName(e.target.value)} placeholder="Nama Menu" className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none font-bold text-gray-900 flex-1" />
+            </div>
+            <div className="flex gap-2">
+              <input value={newMenuPrice} onChange={(e) => setNewMenuPrice(e.target.value)} placeholder="Harga (Misal: 15000)" type="number" className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none font-bold text-gray-900 flex-1" />
+              <button onClick={handleAddMenu} className="px-4 py-2 bg-[#1a1f4d] text-white rounded-xl text-xs font-bold whitespace-nowrap hover:bg-blue-900 transition-colors">Tambah</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+        <h2 className="text-sm font-bold text-blue-600">Label & Filter Khusus</h2>
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map((f) => {
+            const active = selectedFilters.includes(f);
+            return (
+              <button
+                key={f} onClick={() => toggleFilter(f)}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all border ${active ? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"}`}
+              >
+                {f}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+        <h2 className="text-sm font-bold text-blue-600">Area & Lokasi</h2>
+        <div className="flex gap-2">
+          {CAMPUSES.map((c) => (
+            <button key={c.code} onClick={() => setCampus(c.code)} className={`flex-1 rounded-xl border p-3 text-center transition-all ${campus === c.code ? "border-blue-500 bg-blue-50 text-blue-600" : "border-gray-200 bg-gray-50 text-gray-600"}`}>
+              <div className="text-sm font-bold">{c.code}</div>
+            </button>
+          ))}
+        </div>
+        <div className="h-48 w-full rounded-2xl overflow-hidden border border-gray-200 relative z-0">
+          <MapContainer center={[lat, lng]} zoom={16} zoomControl={false} className="h-full w-full">
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" />
+            <LocationMarker />
+            <MapUpdater center={[lat, lng]} />
+          </MapContainer>
+          <div className="absolute top-2 left-2 right-2 z-[400] rounded-xl bg-white/90 backdrop-blur shadow p-2 text-center text-xs font-bold text-gray-800">Ketuk peta untuk geser Pin</div>
+        </div>
+      </div>
+
+      <motion.button
+        whileTap={{ scale: 0.96 }} disabled={loading || !name} onClick={handleSave}
+        className={`flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-bold shadow-xl transition-all ${
+          success ? "bg-emerald-500 text-white" : loading || !name ? "bg-gray-300 text-gray-500" : "bg-gradient-to-r from-blue-600 to-blue-500 text-white"
+        }`}
+      >
+        {loading ? <><Loader2 size={18} className="animate-spin" /> Menyimpan...</> : success ? <><Check size={18} /> Berhasil Diubah!</> : <><Store size={18} /> Simpan Perubahan</>}
       </motion.button>
     </motion.div>
   );
