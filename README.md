@@ -134,7 +134,7 @@ Kesempurnaan aplikasi ini ditopang oleh teknologi modern yang berfokus pada **pe
   </tr>
 </table>
 
-> 💡 **PRO TIP:** *Pindahkan file video `.webp` dari folder lokal ke dalam folder `docs/` di dalam repositori Anda dan ubah *path* `src` di atas menjadi relatif (`docs/nakam_showcase.webp`) sebelum melakukan *push* ke GitHub.*
+
 
 ---
 
