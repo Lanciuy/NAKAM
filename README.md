@@ -106,7 +106,7 @@ Kesempurnaan aplikasi ini ditopang oleh teknologi modern yang berfokus pada **pe
 *Berikut adalah rekaman langsung pengalaman antarmuka NAKAM yang dirancang presisi hingga ke level piksel, menggabungkan fungsionalitas ekstrem dengan estetika kelas dunia.*
 
 <div align="center">
-  <img src="file:///C:/Users/hamda/.gemini/antigravity-ide/brain/3d009df7-763c-4ee3-beb4-ef6e1fa230c1/nakam_showcase_1782747924669.webp" alt="Nakam Live Demo" width="350" style="border-radius: 20px; box-shadow: 0 15px 40px rgba(255,107,26,0.3); border: 1px solid rgba(255,255,255,0.1);"/>
+  <img src="docs/nakam_showcase.webp" alt="Nakam Live Demo" width="350" style="border-radius: 20px; box-shadow: 0 15px 40px rgba(255,107,26,0.3); border: 1px solid rgba(255,255,255,0.1);"/>
 </div>
 
 <br/>
